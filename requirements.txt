@@ -1,0 +1,11 @@
+# Python dependencies for the time-series TDA notebook
+# Install with: pip install -r requirements.txt
+
+numpy>=1.24
+matplotlib>=3.7
+ripser>=0.6       # Vietoris-Rips persistent homology (same Ripser backend as TDAstats/R)
+persim>=0.3       # Persistence diagram tools (optional, for future use)
+jupyter>=1.0      # Jupyter notebook environment
+
+# For funTDA/analysis/funTDA.ipynb (Part A) — requires separate install:
+# pip install giotto-tda networkx
