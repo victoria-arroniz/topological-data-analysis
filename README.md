@@ -92,7 +92,6 @@ Both parts apply the same funTDA workflow: raw data → persistent homology → 
 
 ## References
 
-- Higgins C, Wu H, Carey M. *Statistical Analysis of Network Collections Using Persistent Homology and Functional Data Analysis.* (funTDA paper)
+- Higgins C, Wu H, Carey M. *Statistical Analysis of Network Collections Using Persistent Homology and Functional Data Analysis.*
 - Berry E, Chen Y, Cisewski-Kehe J, Fasy BT. *Functional Summaries of Persistence Diagrams.*
 - Pereira CMM, de Mello RF. *Persistent homology for time series and spatial data clustering.* Expert Systems with Applications, 2015.
-- Costantino RF et al. *Experimentally induced transitions in the dynamic behaviour of insect populations.* Nature, 1995.
