@@ -55,7 +55,7 @@ R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`
 
 ## Part B — Time Series
 
-**Data:** simulated Tribolium flour beetle population dynamics (Costantino et al., 1995). Two dynamical regimes:
+**Data:** simulated Tribolium flour beetle population dynamics (Costantino et al., 1995, via Pereira & de Mello, 2015). Two dynamical regimes:
 - **Stable** (`u_a = 0.73`): converges to a fixed-point attractor
 - **Aperiodic** (`u_a = 0.96`): chaotic oscillations
 
@@ -94,4 +94,5 @@ Both parts apply the same funTDA workflow: raw data → persistent homology → 
 
 - Higgins C, Wu H, Carey M. *Statistical Analysis of Network Collections Using Persistent Homology and Functional Data Analysis.*
 - Berry E, Chen Y, Cisewski-Kehe J, Fasy BT. *Functional Summaries of Persistence Diagrams.*
-- Pereira CMM, de Mello RF. *Persistent homology for time series and spatial data clustering.* Expert Systems with Applications, 2015.
+- Pereira CMM, de Mello RF. *Persistent homology for time series and spatial data clustering.* Expert Systems with Applications, 42 (2015), 6026–6038. — basis of the time-series code (Part B).
+- Costantino RF, Cushing JM, Dennis B, Desharnais RA. *Experimentally induced transitions in the dynamic behaviour of insect populations.* Nature, 375(6528) (1995), 227–230. — original Tribolium (L, P, A) model, cited here via Pereira & de Mello (2015).
