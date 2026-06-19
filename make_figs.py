@@ -41,26 +41,19 @@ tseq   = np.linspace(0, t_max, 500)
 asymp_ls = [landscape_k1(h1, tseq) for h1 in asymp_h1]
 symp_ls  = [landscape_k1(h1, tseq) for h1 in symp_h1]
 
-mean_asymp = np.mean(asymp_ls, axis=0)
-mean_symp  = np.mean(symp_ls,  axis=0)
-
 fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
 
 for ls in asymp_ls:
-    axes[0].plot(tseq, ls, color='#1A3A7A', alpha=0.55, linewidth=0.8)
-axes[0].plot(tseq, mean_asymp, color='#1A3A7A', linewidth=2.5, label='Asymptomatic (n=8)')
-axes[0].set_title('Asymptomatic')
+    axes[0].plot(tseq, ls, color='#1A3A7A', alpha=0.55, linewidth=0.9)
+axes[0].set_title(f'Asymptomatic (n={len(asymp_ls)})')
 axes[0].set_xlabel('Filtration value')
 axes[0].set_ylabel('λ₁(t)')
-axes[0].legend(fontsize=10)
 axes[0].grid(True, alpha=0.3)
 
 for ls in symp_ls:
-    axes[1].plot(tseq, ls, color='#A01828', alpha=0.55, linewidth=0.8)
-axes[1].plot(tseq, mean_symp, color='#A01828', linewidth=2.5, label='Symptomatic (n=9)')
-axes[1].set_title('Symptomatic')
+    axes[1].plot(tseq, ls, color='#A01828', alpha=0.55, linewidth=0.9)
+axes[1].set_title(f'Symptomatic (n={len(symp_ls)})')
 axes[1].set_xlabel('Filtration value')
-axes[1].legend(fontsize=10)
 axes[1].grid(True, alpha=0.3)
 
 fig.suptitle('H1 persistence landscapes of 17 H3N2 gene regulatory networks', fontsize=13)
