@@ -129,38 +129,45 @@ stable_ls_all    = np.load('time-series/stable_landscapes.npy')
 aperiodic_ls_all = np.load('time-series/aperiodic_landscapes.npy')
 tseq_ts          = np.load('time-series/tseq.npy')
 
-y_max = max(stable_ls_all[:40].max(), aperiodic_ls_all[:40].max()) * 1.05
-
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 
 t_ax = np.arange(80)
-axes[0, 0].plot(t_ax, stable_ts[:80], color='#1A3A7A', linewidth=1.5)
+axes[0, 0].plot(t_ax, stable_ts[:80], color='#16336E', linewidth=1.8)
 axes[0, 0].set_title('Stable regime (u_a = 0.73)')
 axes[0, 0].set_xlabel('Time step')
 axes[0, 0].set_ylabel('Adult population (A)')
 axes[0, 0].grid(True, alpha=0.3)
 
-axes[1, 0].plot(t_ax, aperiodic_ts[:80], color='#C85A12', linewidth=1.5)
+axes[1, 0].plot(t_ax, aperiodic_ts[:80], color='#C85A12', linewidth=1.8)
 axes[1, 0].set_title('Aperiodic regime (u_a = 0.96)')
 axes[1, 0].set_xlabel('Time step')
 axes[1, 0].set_ylabel('Adult population (A)')
 axes[1, 0].grid(True, alpha=0.3)
 
+# Landscapes are plotted on INDEPENDENT y-scales: the stable landscapes are
+# ~7x smaller, so a shared axis would flatten them to zero. Own scale + thicker
+# lines makes the stable structure visible.
 for i in range(40):
-    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#1A3A7A', alpha=0.35, linewidth=0.8)
-axes[0, 1].set_title('H1 landscapes — Stable')
+    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.55, linewidth=1.1)
+axes[0, 1].set_title('H1 landscapes — Stable  (note small scale)')
 axes[0, 1].set_xlabel('Filtration value')
 axes[0, 1].set_ylabel('λ₁(t)')
-axes[0, 1].set_ylim(0, y_max)
+axes[0, 1].set_ylim(0, stable_ls_all[:40].max() * 1.10)
 axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].text(0.97, 0.92, f'peak ≈ {stable_ls_all[:40].max():.2f}',
+                transform=axes[0, 1].transAxes, ha='right', va='top',
+                fontsize=9, color='#16336E')
 
 for i in range(40):
-    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.35, linewidth=0.8)
+    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.55, linewidth=1.1)
 axes[1, 1].set_title('H1 landscapes — Aperiodic')
 axes[1, 1].set_xlabel('Filtration value')
 axes[1, 1].set_ylabel('λ₁(t)')
-axes[1, 1].set_ylim(0, y_max)
+axes[1, 1].set_ylim(0, aperiodic_ls_all[:40].max() * 1.10)
 axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:40].max():.2f}',
+                transform=axes[1, 1].transAxes, ha='right', va='top',
+                fontsize=9, color='#C85A12')
 
 plt.tight_layout()
 plt.savefig('figures/timeseries_to_landscape.png', dpi=200, bbox_inches='tight')
@@ -169,24 +176,54 @@ print('figures/timeseries_to_landscape.png saved')
 
 # ─── Figure 4: landscapes_individual_dark.png ─────────────────────────────────
 
-fig, ax = plt.subplots(figsize=(10, 4))
+# Two panels with INDEPENDENT y-scales. On a shared axis the stable
+# landscapes (~7x smaller) collapse onto zero and are indistinguishable;
+# giving each regime its own scale reveals the stable structure.
+fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
-    ax.plot(tseq_ts, stable_ls_all[i],    color='#1A3A7A', alpha=0.5, linewidth=0.8)
-for i in range(50):
-    ax.plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.5, linewidth=0.8)
+    axes[0].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.6, linewidth=1.2)
+axes[0].set_title('Stable (regular)', color='#16336E', fontsize=13, fontweight='bold')
+axes[0].set_xlabel('Filtration value')
+axes[0].set_ylabel('λ₁(t)')
+axes[0].set_ylim(0, stable_ls_all[:50].max() * 1.10)
+axes[0].grid(True, alpha=0.3)
+axes[0].text(0.97, 0.92, f'peak ≈ {stable_ls_all[:50].max():.2f}',
+             transform=axes[0].transAxes, ha='right', va='top', fontsize=10, color='#16336E')
 
-handles = [
-    Line2D([0], [0], color='#1A3A7A', linewidth=2, label='Stable (regular)'),
-    Line2D([0], [0], color='#C85A12', linewidth=2, label='Aperiodic (irregular)'),
-]
-ax.legend(handles=handles, fontsize=11)
-ax.set_xlabel('Filtration value')
-ax.set_ylabel('λ₁(t)')
-ax.set_title('H1 persistence landscapes — Stable vs Aperiodic (50 series each)')
-ax.grid(True, alpha=0.3)
+for i in range(50):
+    axes[1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.6, linewidth=1.2)
+axes[1].set_title('Aperiodic (irregular)', color='#C85A12', fontsize=13, fontweight='bold')
+axes[1].set_xlabel('Filtration value')
+axes[1].set_ylabel('λ₁(t)')
+axes[1].set_ylim(0, aperiodic_ls_all[:50].max() * 1.10)
+axes[1].grid(True, alpha=0.3)
+axes[1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:50].max():.2f}',
+             transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color='#C85A12')
+
+fig.suptitle('H1 persistence landscapes — note the ~7x difference in vertical scale', fontsize=12)
 
 plt.tight_layout()
 plt.savefig('figures/landscapes_individual_dark.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/landscapes_individual_dark.png saved')
+
+# ─── Figure 4b: landscapes_overlaid.png (both regimes, same axis) ──────────────
+fig, ax = plt.subplots(figsize=(10, 4.2))
+for i in range(50):
+    ax.plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.45, linewidth=1.1, zorder=1)
+for i in range(50):
+    ax.plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.85, linewidth=1.3, zorder=2)
+handles = [
+    Line2D([0], [0], color='#16336E', linewidth=2.5, label='Stable (regular)'),
+    Line2D([0], [0], color='#C85A12', linewidth=2.5, label='Aperiodic (irregular)'),
+]
+ax.legend(handles=handles, fontsize=12, loc='upper right')
+ax.set_xlabel('Filtration value')
+ax.set_ylabel('λ₁(t)')
+ax.set_title('H1 persistence landscapes — Stable vs Aperiodic (same axis)')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('figures/landscapes_overlaid.png', dpi=200, bbox_inches='tight')
+plt.close()
+print('figures/landscapes_overlaid.png saved')
