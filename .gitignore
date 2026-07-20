@@ -11,10 +11,6 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Generated outputs (large arrays, plots)
-time-series/*.npy
-time-series/*.png
-
 # Environments
 .env
 .venv/

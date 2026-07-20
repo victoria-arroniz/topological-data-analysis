@@ -81,7 +81,7 @@ Two things distinguish this document from a re-run of prior work:
    used in Part A. Applying the funTDA landscape + FPCA + permutation-test
    pipeline to time series is an extension of the method to a data modality
    the original paper never covers.
-2. **The original `Example1Beetles.R` does not run this functional hypothesis
+2. **The original `Example1Beetles.Rmd` does not run this functional hypothesis
    test either.** It runs two *independent* classification checks, each
    against the true regime labels, each reported as its own confusion matrix:
    (a) k-means clustering of the raw (unnormalized) series into two groups,

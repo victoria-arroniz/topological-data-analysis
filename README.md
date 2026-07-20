@@ -21,7 +21,7 @@ tda-research/
 │       └── PH/                      # Pre-computed birth–death pairs (CSV)
 │
 ├── time-series/                     # Part B: time series TDA
-│   ├── Example1Beetles.R            # Original R code (simulation + k-means/confusion-matrix check)
+│   ├── Example1Beetles.Rmd          # Original R Markdown code (simulation + k-means/confusion-matrix check), kept as reference
 │   ├── beetles_landscapes.ipynb     # Python: simulation, embedding, PH, landscapes
 │   ├── export_landscapes.py         # Exports the notebook's .npy landscapes to output/*.csv
 │   ├── output/                      # stable/aperiodic_landscapes.csv (200x500), tseq.csv
@@ -46,7 +46,7 @@ tda-research/
 
 1. **`funTDA.ipynb` (Python):** converts each adjacency matrix to a graph, computes graph geodesic distances, and runs Flagser persistent homology (H0 and H1) via `giotto-tda`. Outputs are stored as `[birth, death, dimension]` CSV files in `output/PH/`.
 
-2. **`funTDA.R` (R):** reads the birth–death CSVs, computes H1 persistence landscapes on a 500-point grid `tseq = seq(0, 1, 500)`, builds functional data objects (B-splines), runs functional PCA, and applies permutation-based hypothesis tests (`tperm.fd`) to compare symptomatic vs. asymptomatic groups.
+2. **`funTDA.R` (R):** reads the birth–death CSVs, computes H1 persistence landscapes on a 500-point grid `tseq = seq(0, 1, length.out = 500)`, builds functional data objects (B-splines), runs functional PCA, and applies permutation-based hypothesis tests (`tperm.fd`) to compare symptomatic vs. asymptomatic groups.
 
 **Reproducible report:** [`analysis/results_partA.qmd`](funTDA/analysis/results_partA.qmd) (rendered: [`results_partA.pdf`](funTDA/analysis/results_partA.pdf), [`results_partA.html`](funTDA/analysis/results_partA.html)) reruns this pipeline end-to-end on the committed CSVs — FPCA, the asymptomatic-vs-symptomatic permutation test, and a 196-test split-half calibration check — with `stopifnot()` assertions against the reported baseline numbers. It reimplements `TDA::landscape(KK=1)` and a vectorized equivalent of `tperm.fd` in plain R (both validated bit-for-bit against the original functions) so the split-half loop renders in seconds instead of ~2 hours; results are cached in `output/results_partA_permtest_cache.rds`. The PDF is the one to open on GitHub (GitHub previews PDFs inline but only shows raw source for `.html` files); the HTML is self-contained (`embed-resources: true`) for opening locally in a browser.
 
