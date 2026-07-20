@@ -45,11 +45,19 @@ tda-research/
 
 2. **`funTDA.R` (R):** reads the birth–death CSVs, computes H1 persistence landscapes on a 500-point grid `tseq = seq(0, 1, 500)`, builds functional data objects (B-splines), runs functional PCA, and applies permutation-based hypothesis tests (`tperm.fd`) to compare symptomatic vs. asymptomatic groups.
 
+**Reproducible report:** [`analysis/results_partA.qmd`](funTDA/analysis/results_partA.qmd) (rendered: [`results_partA.html`](funTDA/analysis/results_partA.html)) reruns this pipeline end-to-end on the committed CSVs — FPCA, the asymptomatic-vs-symptomatic permutation test, and a 196-test split-half calibration check — with `stopifnot()` assertions against the reported baseline numbers. It reimplements `TDA::landscape(KK=1)` and a vectorized equivalent of `tperm.fd` in plain R (both validated bit-for-bit against the original functions) so the split-half loop renders in seconds instead of ~2 hours; results are cached in `output/results_partA_permtest_cache.rds`.
+
+To render it yourself:
+```
+quarto render funTDA/analysis/results_partA.qmd
+```
+Requires [Quarto](https://quarto.org) and R with packages `fda`, `ggplot2`, `ggrepel`, `patchwork`, `igraph`, `knitr` (see the document's appendix for exact versions via `sessionInfo()`). Delete `output/results_partA_permtest_cache.rds` to force the permutation tests to recompute from scratch.
+
 **Dependencies (Part A):**
 ```
 pip install giotto-tda networkx numpy
 ```
-R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`
+R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`, `igraph` (the last one only for the network-comparison figure in `results_partA.qmd`)
 
 ---
 

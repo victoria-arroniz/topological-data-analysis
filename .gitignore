@@ -19,3 +19,9 @@ time-series/*.png
 .env
 .venv/
 venv/
+
+# Quarto transient render artifacts (results_partA.html itself IS committed)
+/.quarto/
+*.knit.md
+*_files/
+*_cache/
