@@ -13,6 +13,14 @@ format:
     theme: cosmo
     fig-width: 7
     fig-height: 5
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    fig-width: 6.5
+    fig-height: 4.5
+    geometry: margin=1in
+    pdf-engine: xelatex
 engine: knitr
 execute:
   echo: false
@@ -220,7 +228,9 @@ a single representative subject is used — Symptomatic 1, the same one used in
 shown side by side, using the same `r_landscape1()` defined above.
 
 ```{r diagram-landscape-example}
-#| fig-cap: "Representative subject (Symptomatic 1): H0/H1 persistence diagram (left) and H1 landscape λ₁(t) (right)."
+#| fig-cap: "Representative subject (Symptomatic 1): H0/H1 persistence diagram (left) and H1 landscape $\\lambda_1(t)$ (right)."
+#| fig-width: 9
+#| fig-height: 4.5
 PH_s1 <- read.csv(file.path(ph_dir, "Symptomaticadjmatrix1_PH.csv"), header = FALSE)
 colnames(PH_s1) <- c("Birth", "Death", "dimension")
 
@@ -368,7 +378,7 @@ stopifnot(
 :::
 
 The first two functional components explain **`r sprintf("%.1f", cum_pct)`%**
-of the variability among landscapes (PC1 ≈ `r sprintf("%.1f", pc1_pct)`%, PC2 ≈
+of the variability among landscapes (PC1 $\approx$ `r sprintf("%.1f", pc1_pct)`%, PC2 $\approx$
 `r sprintf("%.1f", pc2_pct)`%). In the PC1–PC2 plane, all 8 asymptomatic subjects
 fall in the PC1 > 0 half-plane, while 8 of the 9 symptomatic subjects fall in
 PC1 < 0: **one of the symptomatic subjects** (labeled here in a purely
