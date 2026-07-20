@@ -2693,7 +2693,7 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>The first two functional components explain <strong>83.5%</strong> of the variability among landscapes (PC1 <span class="math inline">\(\approx\)</span> 63.5%, PC2 <span class="math inline">\(\approx\)</span> 20.0%). In the PC1–PC2 plane, all 8 asymptomatic subjects fall in the PC1 &gt; 0 half-plane, while 8 of the 9 symptomatic subjects fall in PC1 &lt; 0: <strong>one of the symptomatic subjects</strong> (labeled here in a purely positional way — the way <code>DataAsymp</code>/<code>DataSymp</code> are built in <code>funTDA.R</code> prepends (<code>cbind(x1, Data)</code>) each new network to those already accumulated, reversing the order within each group relative to the file ID, so the “S1..S9” label should not be read as the subject’s real ID without separately verifying it) overlaps with the asymptomatic region. PC1 separates the two groups reasonably well; PC2 shows no clear separation.</p>
+<p>The first two functional components explain <strong>83.5%</strong> of the variability among landscapes (PC1 <span class="math inline">\(\approx\)</span> 63.5%, PC2 <span class="math inline">\(\approx\)</span> 20.0%). In the PC1–PC2 plane, all 8 asymptomatic subjects fall in the PC1 &gt; 0 half-plane, while 8 of the 9 symptomatic subjects fall in PC1 &lt; 0: <strong>one of the symptomatic subjects</strong> (labeled here in a purely positional way — the <code>DataAsymp</code>/<code>DataSymp</code> construction in the <code>landscape-functions</code> chunk above prepends (<code>cbind(x1, Data)</code>) each new network to those already accumulated, reversing the order within each group relative to the file ID, so the “S1..S9” label should not be read as the subject’s real ID without separately verifying it. <code>funTDA.R</code> was later fixed to build these in ascending file-ID order with labels derived from the real ID; this document keeps the original prepend-based construction so the numbers below continue to match the validated baseline) overlaps with the asymptomatic region. PC1 separates the two groups reasonably well; PC2 shows no clear separation.</p>
 </section>
 <section id="functional-permutation-test-asymptomatic-vs.-symptomatic" class="level2">
 <h2 class="anchored" data-anchor-id="functional-permutation-test-asymptomatic-vs.-symptomatic">Functional permutation test: asymptomatic vs. symptomatic</h2>
@@ -3140,86 +3140,92 @@ window.Quarto = {
 <span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>    pvalsS[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XSymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
 <span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions</span></span>
-<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>  XAsymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdAsymp)</span>
-<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>  splitsA <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">4</span>)</span>
-<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>  pvalsA <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsA))</span>
-<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsA))) {</span>
-<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsA[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, g1)</span>
-<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a>    pvalsA[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XAsymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
-<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">test1 =</span> test1, <span class="at">pvalsS =</span> pvalsS, <span class="at">pvalsA =</span> pvalsA)</span>
-<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(cached, cache_file)</span>
-<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>test1  <span class="ot">&lt;-</span> cached<span class="sc">$</span>test1</span>
-<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a>pvalsS <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsS</span>
-<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>pvalsA <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsA</span>
-<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 126 symptomatic splits (combn(9,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsS) <span class="sc">==</span> <span class="dv">126</span>,</span>
-<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 70 asymptomatic splits (combn(8,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsA) <span class="sc">==</span> <span class="dv">70</span></span>
-<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a>tol_p <span class="ot">&lt;-</span> <span class="fl">0.002</span></span>
-<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a>tol_T <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
+<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions.</span></span>
+<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Because the complement of a 4-of-8 subset is also a 4-of-8 subset, every</span></span>
+<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>  <span class="co"># unique 4-vs-4 partition appears twice among these 70 (once with each</span></span>
+<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>  <span class="co"># half as group1) — 35 unique partitions, each tested twice. Not</span></span>
+<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>  <span class="co"># collapsed, to keep reproducing the baseline. The symptomatic loop above</span></span>
+<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (combn(1:9, 4), 4-vs-5) does not have this issue: a 5-element complement</span></span>
+<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a>  <span class="co"># is never itself drawn as a 4-element subset, so all 126 are distinct.</span></span>
+<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>  XAsymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdAsymp)</span>
+<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a>  splitsA <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">4</span>)</span>
+<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>  pvalsA <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsA))</span>
+<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsA))) {</span>
+<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsA[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, g1)</span>
+<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a>    pvalsA[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XAsymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
+<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">test1 =</span> test1, <span class="at">pvalsS =</span> pvalsS, <span class="at">pvalsA =</span> pvalsA)</span>
+<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(cached, cache_file)</span>
+<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>test1  <span class="ot">&lt;-</span> cached<span class="sc">$</span>test1</span>
+<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>pvalsS <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsS</span>
+<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a>pvalsA <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsA</span>
+<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Main test p-value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>pval <span class="sc">-</span> ref<span class="sc">$</span>test1_p) <span class="sc">&lt;</span> tol_p,</span>
-<span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Observed Tmax out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>Tobs <span class="sc">-</span> ref<span class="sc">$</span>test1_Tobs) <span class="sc">&lt;</span> tol_T,</span>
-<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;95% critical value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>crit95 <span class="sc">-</span> ref<span class="sc">$</span>test1_crit95) <span class="sc">&lt;</span> tol_T</span>
-<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>splithalf_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>  <span class="at">Group =</span> <span class="fu">c</span>(<span class="st">&quot;Symptomatic (126 splits, 4 vs 5)&quot;</span>, <span class="st">&quot;Asymptomatic (70 splits, 4 vs 4)&quot;</span>),</span>
-<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">mean p-value</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS), <span class="fu">mean</span>(pvalsA))),</span>
-<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">sd(p-value)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">sd</span>(pvalsS), <span class="fu">sd</span>(pvalsA))),</span>
-<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">% splits with p &lt; 0.05</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>)) <span class="sc">*</span> <span class="dv">100</span>),</span>
-<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(splithalf_summary, <span class="at">align =</span> <span class="st">&quot;lrrr&quot;</span>)</span>
-<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a>histS <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsS), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
-<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_symp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
-<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
-<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Symptomatic (126 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
-<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
-<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a>histA <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsA), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
-<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_asymp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 126 symptomatic splits (combn(9,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsS) <span class="sc">==</span> <span class="dv">126</span>,</span>
+<span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 70 asymptomatic splits (combn(8,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsA) <span class="sc">==</span> <span class="dv">70</span></span>
+<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>tol_p <span class="ot">&lt;-</span> <span class="fl">0.002</span></span>
+<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>tol_T <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
+<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Main test p-value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>pval <span class="sc">-</span> ref<span class="sc">$</span>test1_p) <span class="sc">&lt;</span> tol_p,</span>
+<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Observed Tmax out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>Tobs <span class="sc">-</span> ref<span class="sc">$</span>test1_Tobs) <span class="sc">&lt;</span> tol_T,</span>
+<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;95% critical value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>crit95 <span class="sc">-</span> ref<span class="sc">$</span>test1_crit95) <span class="sc">&lt;</span> tol_T</span>
+<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a>splithalf_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a>  <span class="at">Group =</span> <span class="fu">c</span>(<span class="st">&quot;Symptomatic (126 splits, 4 vs 5)&quot;</span>, <span class="st">&quot;Asymptomatic (70 splits, 4 vs 4)&quot;</span>),</span>
+<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">mean p-value</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS), <span class="fu">mean</span>(pvalsA))),</span>
+<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">sd(p-value)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">sd</span>(pvalsS), <span class="fu">sd</span>(pvalsA))),</span>
+<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">% splits with p &lt; 0.05</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>)) <span class="sc">*</span> <span class="dv">100</span>),</span>
+<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(splithalf_summary, <span class="at">align =</span> <span class="st">&quot;lrrr&quot;</span>)</span>
+<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a>histS <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsS), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
+<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_symp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
 <span id="cb3-319"><a href="#cb3-319" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
-<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Asymptomatic (70 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Symptomatic (126 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
 <span id="cb3-321"><a href="#cb3-321" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
 <span id="cb3-322"><a href="#cb3-322" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a>histA <span class="sc">+</span> histS</span>
-<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a>tol_mean <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
-<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a>tol_sd   <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
-<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a>tol_frac <span class="ot">&lt;-</span> <span class="fl">2.0</span>  <span class="co"># percentage points</span></span>
-<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic mean p out of tolerance&quot;</span>  <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_mean) <span class="sc">&lt;</span> tol_mean,</span>
-<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic sd p out of tolerance&quot;</span>    <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_sd) <span class="sc">&lt;</span> tol_sd,</span>
-<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>symp_frac05) <span class="sc">&lt;</span> tol_frac,</span>
-<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic mean p out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_mean) <span class="sc">&lt;</span> tol_mean,</span>
-<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic sd p out of tolerance&quot;</span>   <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_sd) <span class="sc">&lt;</span> tol_sd,</span>
-<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>asymp_frac05) <span class="sc">&lt;</span> tol_frac</span>
-<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TDA)</span>
-<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a>tseq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">500</span>)</span>
-<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a>maxdiff <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> ph_files) {</span>
-<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a>  PH <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(PH) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>, <span class="st">&quot;dimension&quot;</span>)</span>
-<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a>  PHm <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(PH[<span class="fu">c</span>(<span class="st">&quot;dimension&quot;</span>, <span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>)])</span>
-<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a>  ref_landscape  <span class="ot">&lt;-</span> <span class="fu">landscape</span>(PHm, <span class="at">dimension =</span> <span class="dv">1</span>, <span class="at">KK =</span> <span class="dv">1</span>, tseq)</span>
-<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a>  mine_landscape <span class="ot">&lt;-</span> <span class="fu">r_landscape1</span>(PH, <span class="at">dim =</span> <span class="dv">1</span>, <span class="at">tseq =</span> tseq)</span>
-<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a>  maxdiff <span class="ot">&lt;-</span> <span class="fu">max</span>(maxdiff, <span class="fu">max</span>(<span class="fu">abs</span>(ref_landscape <span class="sc">-</span> mine_landscape)))</span>
-<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a>maxdiff  <span class="co"># 0 across the 17 subjects</span></span>
-<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a>ref_test  <span class="ot">&lt;-</span> <span class="fu">tperm.fd</span>(fdAsymp, fdSymp, <span class="at">nperm =</span> <span class="dv">500</span>, <span class="at">q =</span> <span class="fl">0.05</span>, <span class="at">plotres =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a>mine_test <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(<span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp)),</span>
-<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a>                     <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">500</span>)</span>
-<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>pval, mine_test<span class="sc">$</span>pval)) <span class="co"># TRUE</span></span>
-<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>Tobs, mine_test<span class="sc">$</span>Tobs)) <span class="co"># TRUE</span></span>
-<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a>histA <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsA), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
+<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_asymp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Asymptomatic (70 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
+<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a>histA <span class="sc">+</span> histS</span>
+<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a>tol_mean <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>tol_sd   <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a>tol_frac <span class="ot">&lt;-</span> <span class="fl">2.0</span>  <span class="co"># percentage points</span></span>
+<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic mean p out of tolerance&quot;</span>  <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_mean) <span class="sc">&lt;</span> tol_mean,</span>
+<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic sd p out of tolerance&quot;</span>    <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_sd) <span class="sc">&lt;</span> tol_sd,</span>
+<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>symp_frac05) <span class="sc">&lt;</span> tol_frac,</span>
+<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic mean p out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_mean) <span class="sc">&lt;</span> tol_mean,</span>
+<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic sd p out of tolerance&quot;</span>   <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_sd) <span class="sc">&lt;</span> tol_sd,</span>
+<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>asymp_frac05) <span class="sc">&lt;</span> tol_frac</span>
+<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TDA)</span>
+<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a>tseq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">500</span>)</span>
+<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a>maxdiff <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> ph_files) {</span>
+<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>  PH <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(PH) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>, <span class="st">&quot;dimension&quot;</span>)</span>
+<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a>  PHm <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(PH[<span class="fu">c</span>(<span class="st">&quot;dimension&quot;</span>, <span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>)])</span>
+<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a>  ref_landscape  <span class="ot">&lt;-</span> <span class="fu">landscape</span>(PHm, <span class="at">dimension =</span> <span class="dv">1</span>, <span class="at">KK =</span> <span class="dv">1</span>, tseq)</span>
+<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a>  mine_landscape <span class="ot">&lt;-</span> <span class="fu">r_landscape1</span>(PH, <span class="at">dim =</span> <span class="dv">1</span>, <span class="at">tseq =</span> tseq)</span>
+<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a>  maxdiff <span class="ot">&lt;-</span> <span class="fu">max</span>(maxdiff, <span class="fu">max</span>(<span class="fu">abs</span>(ref_landscape <span class="sc">-</span> mine_landscape)))</span>
+<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a>maxdiff  <span class="co"># 0 across the 17 subjects</span></span>
+<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a>ref_test  <span class="ot">&lt;-</span> <span class="fu">tperm.fd</span>(fdAsymp, fdSymp, <span class="at">nperm =</span> <span class="dv">500</span>, <span class="at">q =</span> <span class="fl">0.05</span>, <span class="at">plotres =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-355"><a href="#cb3-355" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb3-356"><a href="#cb3-356" aria-hidden="true" tabindex="-1"></a>mine_test <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(<span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp)),</span>
+<span id="cb3-357"><a href="#cb3-357" aria-hidden="true" tabindex="-1"></a>                     <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">500</span>)</span>
+<span id="cb3-358"><a href="#cb3-358" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>pval, mine_test<span class="sc">$</span>pval)) <span class="co"># TRUE</span></span>
+<span id="cb3-359"><a href="#cb3-359" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>Tobs, mine_test<span class="sc">$</span>Tobs)) <span class="co"># TRUE</span></span>
+<span id="cb3-360"><a href="#cb3-360" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -4110,246 +4116,256 @@ loaded via a namespace (and not attached):
 <span id="cb6-382"><a href="#cb6-382" aria-hidden="true" tabindex="-1"></a><span class="in">`r sprintf(&quot;%.1f&quot;, pc2_pct)`</span>%). In the PC1–PC2 plane, all 8 asymptomatic subjects</span>
 <span id="cb6-383"><a href="#cb6-383" aria-hidden="true" tabindex="-1"></a>fall in the PC1 &gt; 0 half-plane, while 8 of the 9 symptomatic subjects fall in</span>
 <span id="cb6-384"><a href="#cb6-384" aria-hidden="true" tabindex="-1"></a>PC1 &lt; 0: **one of the symptomatic subjects** (labeled here in a purely</span>
-<span id="cb6-385"><a href="#cb6-385" aria-hidden="true" tabindex="-1"></a>positional way — the way <span class="in">`DataAsymp`</span>/<span class="in">`DataSymp`</span> are built in <span class="in">`funTDA.R`</span></span>
-<span id="cb6-386"><a href="#cb6-386" aria-hidden="true" tabindex="-1"></a>prepends (<span class="in">`cbind(x1, Data)`</span>) each new network to those already accumulated,</span>
-<span id="cb6-387"><a href="#cb6-387" aria-hidden="true" tabindex="-1"></a>reversing the order within each group relative to the file ID, so the</span>
-<span id="cb6-388"><a href="#cb6-388" aria-hidden="true" tabindex="-1"></a>&quot;S1..S9&quot; label should not be read as the subject&#39;s real ID without separately</span>
-<span id="cb6-389"><a href="#cb6-389" aria-hidden="true" tabindex="-1"></a>verifying it) overlaps with the asymptomatic region. PC1 separates the two</span>
-<span id="cb6-390"><a href="#cb6-390" aria-hidden="true" tabindex="-1"></a>groups reasonably well; PC2 shows no clear separation.</span>
-<span id="cb6-391"><a href="#cb6-391" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-392"><a href="#cb6-392" aria-hidden="true" tabindex="-1"></a><span class="fu">## Functional permutation test: asymptomatic vs. symptomatic</span></span>
-<span id="cb6-393"><a href="#cb6-393" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-394"><a href="#cb6-394" aria-hidden="true" tabindex="-1"></a>To avoid relying on <span class="in">`tperm.fd`</span> with <span class="in">`nperm = 10000`</span> (~40 s per test, infeasible</span>
-<span id="cb6-395"><a href="#cb6-395" aria-hidden="true" tabindex="-1"></a>for the 196 split-half tests), a vectorized version of the **same test** is used:</span>
-<span id="cb6-396"><a href="#cb6-396" aria-hidden="true" tabindex="-1"></a>it evaluates each functional object on the same grid <span class="in">`tperm.fd`</span> uses by default</span>
-<span id="cb6-397"><a href="#cb6-397" aria-hidden="true" tabindex="-1"></a>(<span class="in">`argvals = seq(0, 1, length.out = 101)`</span>) and permutes columns of a matrix</span>
-<span id="cb6-398"><a href="#cb6-398" aria-hidden="true" tabindex="-1"></a>instead of re-evaluating <span class="in">`fd`</span> on every permutation. It was validated to</span>
-<span id="cb6-399"><a href="#cb6-399" aria-hidden="true" tabindex="-1"></a>reproduce <span class="in">`tperm.fd`</span> **bit-for-bit** with the same seed (see appendix).</span>
-<span id="cb6-400"><a href="#cb6-400" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-401"><a href="#cb6-401" aria-hidden="true" tabindex="-1"></a><span class="in">```{r vtperm-def}</span></span>
-<span id="cb6-402"><a href="#cb6-402" aria-hidden="true" tabindex="-1"></a>rowVar <span class="ot">&lt;-</span> <span class="cf">function</span>(M) {</span>
-<span id="cb6-403"><a href="#cb6-403" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">ncol</span>(M)</span>
-<span id="cb6-404"><a href="#cb6-404" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M)</span>
-<span id="cb6-405"><a href="#cb6-405" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowSums</span>((M <span class="sc">-</span> mu)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> (n <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb6-406"><a href="#cb6-406" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb6-407"><a href="#cb6-407" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-408"><a href="#cb6-408" aria-hidden="true" tabindex="-1"></a>vtperm <span class="ot">&lt;-</span> <span class="cf">function</span>(X, i1, i2, <span class="at">nperm =</span> <span class="dv">10000</span>) {</span>
-<span id="cb6-409"><a href="#cb6-409" aria-hidden="true" tabindex="-1"></a>  x1 <span class="ot">&lt;-</span> X[, i1, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb6-410"><a href="#cb6-410" aria-hidden="true" tabindex="-1"></a>  x2 <span class="ot">&lt;-</span> X[, i2, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb6-411"><a href="#cb6-411" aria-hidden="true" tabindex="-1"></a>  n1 <span class="ot">&lt;-</span> <span class="fu">ncol</span>(x1); n2 <span class="ot">&lt;-</span> <span class="fu">ncol</span>(x2)</span>
-<span id="cb6-412"><a href="#cb6-412" aria-hidden="true" tabindex="-1"></a>  Xmat <span class="ot">&lt;-</span> <span class="fu">cbind</span>(x1, x2)</span>
-<span id="cb6-413"><a href="#cb6-413" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> n1 <span class="sc">+</span> n2</span>
-<span id="cb6-414"><a href="#cb6-414" aria-hidden="true" tabindex="-1"></a>  Ts <span class="ot">&lt;-</span> <span class="cf">function</span>(M) {</span>
-<span id="cb6-415"><a href="#cb6-415" aria-hidden="true" tabindex="-1"></a>    m1 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M[, <span class="dv">1</span><span class="sc">:</span>n1, <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
-<span id="cb6-416"><a href="#cb6-416" aria-hidden="true" tabindex="-1"></a>    m2 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M[, n1 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">:</span>n2), <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
-<span id="cb6-417"><a href="#cb6-417" aria-hidden="true" tabindex="-1"></a>    v1 <span class="ot">&lt;-</span> <span class="fu">rowVar</span>(M[, <span class="dv">1</span><span class="sc">:</span>n1, <span class="at">drop =</span> <span class="cn">FALSE</span>]) <span class="sc">/</span> n1</span>
-<span id="cb6-418"><a href="#cb6-418" aria-hidden="true" tabindex="-1"></a>    v2 <span class="ot">&lt;-</span> <span class="fu">rowVar</span>(M[, n1 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">:</span>n2), <span class="at">drop =</span> <span class="cn">FALSE</span>]) <span class="sc">/</span> n2</span>
-<span id="cb6-419"><a href="#cb6-419" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(m1 <span class="sc">-</span> m2) <span class="sc">/</span> <span class="fu">sqrt</span>(v1 <span class="sc">+</span> v2))</span>
-<span id="cb6-420"><a href="#cb6-420" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-421"><a href="#cb6-421" aria-hidden="true" tabindex="-1"></a>  Tobs <span class="ot">&lt;-</span> <span class="fu">Ts</span>(Xmat)</span>
-<span id="cb6-422"><a href="#cb6-422" aria-hidden="true" tabindex="-1"></a>  Tn <span class="ot">&lt;-</span> <span class="fu">numeric</span>(nperm)</span>
-<span id="cb6-423"><a href="#cb6-423" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nperm) Tn[i] <span class="ot">&lt;-</span> <span class="fu">Ts</span>(Xmat[, <span class="fu">sample</span>(n)])</span>
-<span id="cb6-424"><a href="#cb6-424" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">pval =</span> <span class="fu">mean</span>(Tobs <span class="sc">&lt;</span> Tn), <span class="at">Tobs =</span> Tobs, <span class="at">crit95 =</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(Tn, <span class="fl">0.95</span>)))</span>
-<span id="cb6-425"><a href="#cb6-425" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb6-426"><a href="#cb6-426" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-427"><a href="#cb6-427" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-428"><a href="#cb6-428" aria-hidden="true" tabindex="-1"></a><span class="in">```{r permtests}</span></span>
-<span id="cb6-429"><a href="#cb6-429" aria-hidden="true" tabindex="-1"></a>argvals <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">101</span>)</span>
-<span id="cb6-430"><a href="#cb6-430" aria-hidden="true" tabindex="-1"></a>cache_file <span class="ot">&lt;-</span> <span class="st">&quot;../output/results_partA_permtest_cache.rds&quot;</span></span>
+<span id="cb6-385"><a href="#cb6-385" aria-hidden="true" tabindex="-1"></a>positional way — the <span class="in">`DataAsymp`</span>/<span class="in">`DataSymp`</span> construction in the</span>
+<span id="cb6-386"><a href="#cb6-386" aria-hidden="true" tabindex="-1"></a><span class="in">`landscape-functions`</span> chunk above prepends (<span class="in">`cbind(x1, Data)`</span>) each new</span>
+<span id="cb6-387"><a href="#cb6-387" aria-hidden="true" tabindex="-1"></a>network to those already accumulated, reversing the order within each group</span>
+<span id="cb6-388"><a href="#cb6-388" aria-hidden="true" tabindex="-1"></a>relative to the file ID, so the &quot;S1..S9&quot; label should not be read as the</span>
+<span id="cb6-389"><a href="#cb6-389" aria-hidden="true" tabindex="-1"></a>subject&#39;s real ID without separately verifying it. <span class="in">`funTDA.R`</span> was later fixed</span>
+<span id="cb6-390"><a href="#cb6-390" aria-hidden="true" tabindex="-1"></a>to build these in ascending file-ID order with labels derived from the real</span>
+<span id="cb6-391"><a href="#cb6-391" aria-hidden="true" tabindex="-1"></a>ID; this document keeps the original prepend-based construction so the</span>
+<span id="cb6-392"><a href="#cb6-392" aria-hidden="true" tabindex="-1"></a>numbers below continue to match the validated baseline) overlaps with the</span>
+<span id="cb6-393"><a href="#cb6-393" aria-hidden="true" tabindex="-1"></a>asymptomatic region. PC1 separates the two groups reasonably well; PC2 shows</span>
+<span id="cb6-394"><a href="#cb6-394" aria-hidden="true" tabindex="-1"></a>no clear separation.</span>
+<span id="cb6-395"><a href="#cb6-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-396"><a href="#cb6-396" aria-hidden="true" tabindex="-1"></a><span class="fu">## Functional permutation test: asymptomatic vs. symptomatic</span></span>
+<span id="cb6-397"><a href="#cb6-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-398"><a href="#cb6-398" aria-hidden="true" tabindex="-1"></a>To avoid relying on <span class="in">`tperm.fd`</span> with <span class="in">`nperm = 10000`</span> (~40 s per test, infeasible</span>
+<span id="cb6-399"><a href="#cb6-399" aria-hidden="true" tabindex="-1"></a>for the 196 split-half tests), a vectorized version of the **same test** is used:</span>
+<span id="cb6-400"><a href="#cb6-400" aria-hidden="true" tabindex="-1"></a>it evaluates each functional object on the same grid <span class="in">`tperm.fd`</span> uses by default</span>
+<span id="cb6-401"><a href="#cb6-401" aria-hidden="true" tabindex="-1"></a>(<span class="in">`argvals = seq(0, 1, length.out = 101)`</span>) and permutes columns of a matrix</span>
+<span id="cb6-402"><a href="#cb6-402" aria-hidden="true" tabindex="-1"></a>instead of re-evaluating <span class="in">`fd`</span> on every permutation. It was validated to</span>
+<span id="cb6-403"><a href="#cb6-403" aria-hidden="true" tabindex="-1"></a>reproduce <span class="in">`tperm.fd`</span> **bit-for-bit** with the same seed (see appendix).</span>
+<span id="cb6-404"><a href="#cb6-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-405"><a href="#cb6-405" aria-hidden="true" tabindex="-1"></a><span class="in">```{r vtperm-def}</span></span>
+<span id="cb6-406"><a href="#cb6-406" aria-hidden="true" tabindex="-1"></a>rowVar <span class="ot">&lt;-</span> <span class="cf">function</span>(M) {</span>
+<span id="cb6-407"><a href="#cb6-407" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">ncol</span>(M)</span>
+<span id="cb6-408"><a href="#cb6-408" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M)</span>
+<span id="cb6-409"><a href="#cb6-409" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowSums</span>((M <span class="sc">-</span> mu)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> (n <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-410"><a href="#cb6-410" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-411"><a href="#cb6-411" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-412"><a href="#cb6-412" aria-hidden="true" tabindex="-1"></a>vtperm <span class="ot">&lt;-</span> <span class="cf">function</span>(X, i1, i2, <span class="at">nperm =</span> <span class="dv">10000</span>) {</span>
+<span id="cb6-413"><a href="#cb6-413" aria-hidden="true" tabindex="-1"></a>  x1 <span class="ot">&lt;-</span> X[, i1, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb6-414"><a href="#cb6-414" aria-hidden="true" tabindex="-1"></a>  x2 <span class="ot">&lt;-</span> X[, i2, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb6-415"><a href="#cb6-415" aria-hidden="true" tabindex="-1"></a>  n1 <span class="ot">&lt;-</span> <span class="fu">ncol</span>(x1); n2 <span class="ot">&lt;-</span> <span class="fu">ncol</span>(x2)</span>
+<span id="cb6-416"><a href="#cb6-416" aria-hidden="true" tabindex="-1"></a>  Xmat <span class="ot">&lt;-</span> <span class="fu">cbind</span>(x1, x2)</span>
+<span id="cb6-417"><a href="#cb6-417" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> n1 <span class="sc">+</span> n2</span>
+<span id="cb6-418"><a href="#cb6-418" aria-hidden="true" tabindex="-1"></a>  Ts <span class="ot">&lt;-</span> <span class="cf">function</span>(M) {</span>
+<span id="cb6-419"><a href="#cb6-419" aria-hidden="true" tabindex="-1"></a>    m1 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M[, <span class="dv">1</span><span class="sc">:</span>n1, <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
+<span id="cb6-420"><a href="#cb6-420" aria-hidden="true" tabindex="-1"></a>    m2 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(M[, n1 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">:</span>n2), <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
+<span id="cb6-421"><a href="#cb6-421" aria-hidden="true" tabindex="-1"></a>    v1 <span class="ot">&lt;-</span> <span class="fu">rowVar</span>(M[, <span class="dv">1</span><span class="sc">:</span>n1, <span class="at">drop =</span> <span class="cn">FALSE</span>]) <span class="sc">/</span> n1</span>
+<span id="cb6-422"><a href="#cb6-422" aria-hidden="true" tabindex="-1"></a>    v2 <span class="ot">&lt;-</span> <span class="fu">rowVar</span>(M[, n1 <span class="sc">+</span> (<span class="dv">1</span><span class="sc">:</span>n2), <span class="at">drop =</span> <span class="cn">FALSE</span>]) <span class="sc">/</span> n2</span>
+<span id="cb6-423"><a href="#cb6-423" aria-hidden="true" tabindex="-1"></a>    <span class="fu">max</span>(<span class="fu">abs</span>(m1 <span class="sc">-</span> m2) <span class="sc">/</span> <span class="fu">sqrt</span>(v1 <span class="sc">+</span> v2))</span>
+<span id="cb6-424"><a href="#cb6-424" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-425"><a href="#cb6-425" aria-hidden="true" tabindex="-1"></a>  Tobs <span class="ot">&lt;-</span> <span class="fu">Ts</span>(Xmat)</span>
+<span id="cb6-426"><a href="#cb6-426" aria-hidden="true" tabindex="-1"></a>  Tn <span class="ot">&lt;-</span> <span class="fu">numeric</span>(nperm)</span>
+<span id="cb6-427"><a href="#cb6-427" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nperm) Tn[i] <span class="ot">&lt;-</span> <span class="fu">Ts</span>(Xmat[, <span class="fu">sample</span>(n)])</span>
+<span id="cb6-428"><a href="#cb6-428" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">pval =</span> <span class="fu">mean</span>(Tobs <span class="sc">&lt;</span> Tn), <span class="at">Tobs =</span> Tobs, <span class="at">crit95 =</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(Tn, <span class="fl">0.95</span>)))</span>
+<span id="cb6-429"><a href="#cb6-429" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-430"><a href="#cb6-430" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb6-431"><a href="#cb6-431" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-432"><a href="#cb6-432" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(cache_file)) {</span>
-<span id="cb6-433"><a href="#cb6-433" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(cache_file)</span>
-<span id="cb6-434"><a href="#cb6-434" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb6-435"><a href="#cb6-435" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb6-436"><a href="#cb6-436" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-437"><a href="#cb6-437" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1) Main test: Asymptomatic vs Symptomatic</span></span>
-<span id="cb6-438"><a href="#cb6-438" aria-hidden="true" tabindex="-1"></a>  XFull <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp))</span>
-<span id="cb6-439"><a href="#cb6-439" aria-hidden="true" tabindex="-1"></a>  test1 <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XFull, <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">10000</span>)</span>
+<span id="cb6-432"><a href="#cb6-432" aria-hidden="true" tabindex="-1"></a><span class="in">```{r permtests}</span></span>
+<span id="cb6-433"><a href="#cb6-433" aria-hidden="true" tabindex="-1"></a>argvals <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">101</span>)</span>
+<span id="cb6-434"><a href="#cb6-434" aria-hidden="true" tabindex="-1"></a>cache_file <span class="ot">&lt;-</span> <span class="st">&quot;../output/results_partA_permtest_cache.rds&quot;</span></span>
+<span id="cb6-435"><a href="#cb6-435" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-436"><a href="#cb6-436" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(cache_file)) {</span>
+<span id="cb6-437"><a href="#cb6-437" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(cache_file)</span>
+<span id="cb6-438"><a href="#cb6-438" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb6-439"><a href="#cb6-439" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
 <span id="cb6-440"><a href="#cb6-440" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-441"><a href="#cb6-441" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2) Symptomatic split-half: combn(1:9, 4) = 126 4-vs-5 partitions</span></span>
-<span id="cb6-442"><a href="#cb6-442" aria-hidden="true" tabindex="-1"></a>  XSymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdSymp)</span>
-<span id="cb6-443"><a href="#cb6-443" aria-hidden="true" tabindex="-1"></a>  splitsS <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>, <span class="dv">4</span>)</span>
-<span id="cb6-444"><a href="#cb6-444" aria-hidden="true" tabindex="-1"></a>  pvalsS <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsS))</span>
-<span id="cb6-445"><a href="#cb6-445" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsS))) {</span>
-<span id="cb6-446"><a href="#cb6-446" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsS[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>, g1)</span>
-<span id="cb6-447"><a href="#cb6-447" aria-hidden="true" tabindex="-1"></a>    pvalsS[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XSymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
-<span id="cb6-448"><a href="#cb6-448" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-449"><a href="#cb6-449" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-450"><a href="#cb6-450" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions</span></span>
-<span id="cb6-451"><a href="#cb6-451" aria-hidden="true" tabindex="-1"></a>  XAsymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdAsymp)</span>
-<span id="cb6-452"><a href="#cb6-452" aria-hidden="true" tabindex="-1"></a>  splitsA <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">4</span>)</span>
-<span id="cb6-453"><a href="#cb6-453" aria-hidden="true" tabindex="-1"></a>  pvalsA <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsA))</span>
-<span id="cb6-454"><a href="#cb6-454" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsA))) {</span>
-<span id="cb6-455"><a href="#cb6-455" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsA[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, g1)</span>
-<span id="cb6-456"><a href="#cb6-456" aria-hidden="true" tabindex="-1"></a>    pvalsA[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XAsymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
-<span id="cb6-457"><a href="#cb6-457" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-458"><a href="#cb6-458" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-459"><a href="#cb6-459" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">test1 =</span> test1, <span class="at">pvalsS =</span> pvalsS, <span class="at">pvalsA =</span> pvalsA)</span>
-<span id="cb6-460"><a href="#cb6-460" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(cached, cache_file)</span>
-<span id="cb6-461"><a href="#cb6-461" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb6-462"><a href="#cb6-462" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-463"><a href="#cb6-463" aria-hidden="true" tabindex="-1"></a>test1  <span class="ot">&lt;-</span> cached<span class="sc">$</span>test1</span>
-<span id="cb6-464"><a href="#cb6-464" aria-hidden="true" tabindex="-1"></a>pvalsS <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsS</span>
-<span id="cb6-465"><a href="#cb6-465" aria-hidden="true" tabindex="-1"></a>pvalsA <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsA</span>
-<span id="cb6-466"><a href="#cb6-466" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-467"><a href="#cb6-467" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb6-468"><a href="#cb6-468" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 126 symptomatic splits (combn(9,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsS) <span class="sc">==</span> <span class="dv">126</span>,</span>
-<span id="cb6-469"><a href="#cb6-469" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 70 asymptomatic splits (combn(8,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsA) <span class="sc">==</span> <span class="dv">70</span></span>
-<span id="cb6-470"><a href="#cb6-470" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-471"><a href="#cb6-471" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-441"><a href="#cb6-441" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1) Main test: Asymptomatic vs Symptomatic</span></span>
+<span id="cb6-442"><a href="#cb6-442" aria-hidden="true" tabindex="-1"></a>  XFull <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp))</span>
+<span id="cb6-443"><a href="#cb6-443" aria-hidden="true" tabindex="-1"></a>  test1 <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XFull, <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">10000</span>)</span>
+<span id="cb6-444"><a href="#cb6-444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-445"><a href="#cb6-445" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2) Symptomatic split-half: combn(1:9, 4) = 126 4-vs-5 partitions</span></span>
+<span id="cb6-446"><a href="#cb6-446" aria-hidden="true" tabindex="-1"></a>  XSymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdSymp)</span>
+<span id="cb6-447"><a href="#cb6-447" aria-hidden="true" tabindex="-1"></a>  splitsS <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>, <span class="dv">4</span>)</span>
+<span id="cb6-448"><a href="#cb6-448" aria-hidden="true" tabindex="-1"></a>  pvalsS <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsS))</span>
+<span id="cb6-449"><a href="#cb6-449" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsS))) {</span>
+<span id="cb6-450"><a href="#cb6-450" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsS[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">9</span>, g1)</span>
+<span id="cb6-451"><a href="#cb6-451" aria-hidden="true" tabindex="-1"></a>    pvalsS[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XSymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
+<span id="cb6-452"><a href="#cb6-452" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-453"><a href="#cb6-453" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-454"><a href="#cb6-454" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions.</span></span>
+<span id="cb6-455"><a href="#cb6-455" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Because the complement of a 4-of-8 subset is also a 4-of-8 subset, every</span></span>
+<span id="cb6-456"><a href="#cb6-456" aria-hidden="true" tabindex="-1"></a>  <span class="co"># unique 4-vs-4 partition appears twice among these 70 (once with each</span></span>
+<span id="cb6-457"><a href="#cb6-457" aria-hidden="true" tabindex="-1"></a>  <span class="co"># half as group1) — 35 unique partitions, each tested twice. Not</span></span>
+<span id="cb6-458"><a href="#cb6-458" aria-hidden="true" tabindex="-1"></a>  <span class="co"># collapsed, to keep reproducing the baseline. The symptomatic loop above</span></span>
+<span id="cb6-459"><a href="#cb6-459" aria-hidden="true" tabindex="-1"></a>  <span class="co"># (combn(1:9, 4), 4-vs-5) does not have this issue: a 5-element complement</span></span>
+<span id="cb6-460"><a href="#cb6-460" aria-hidden="true" tabindex="-1"></a>  <span class="co"># is never itself drawn as a 4-element subset, so all 126 are distinct.</span></span>
+<span id="cb6-461"><a href="#cb6-461" aria-hidden="true" tabindex="-1"></a>  XAsymp <span class="ot">&lt;-</span> <span class="fu">eval.fd</span>(argvals, fdAsymp)</span>
+<span id="cb6-462"><a href="#cb6-462" aria-hidden="true" tabindex="-1"></a>  splitsA <span class="ot">&lt;-</span> <span class="fu">combn</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">4</span>)</span>
+<span id="cb6-463"><a href="#cb6-463" aria-hidden="true" tabindex="-1"></a>  pvalsA <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncol</span>(splitsA))</span>
+<span id="cb6-464"><a href="#cb6-464" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">ncol</span>(splitsA))) {</span>
+<span id="cb6-465"><a href="#cb6-465" aria-hidden="true" tabindex="-1"></a>    g1 <span class="ot">&lt;-</span> splitsA[, i]; g2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, g1)</span>
+<span id="cb6-466"><a href="#cb6-466" aria-hidden="true" tabindex="-1"></a>    pvalsA[i] <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(XAsymp, g1, g2, <span class="at">nperm =</span> <span class="dv">10000</span>)<span class="sc">$</span>pval</span>
+<span id="cb6-467"><a href="#cb6-467" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-468"><a href="#cb6-468" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-469"><a href="#cb6-469" aria-hidden="true" tabindex="-1"></a>  cached <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">test1 =</span> test1, <span class="at">pvalsS =</span> pvalsS, <span class="at">pvalsA =</span> pvalsA)</span>
+<span id="cb6-470"><a href="#cb6-470" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(cached, cache_file)</span>
+<span id="cb6-471"><a href="#cb6-471" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb6-472"><a href="#cb6-472" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-473"><a href="#cb6-473" aria-hidden="true" tabindex="-1"></a>::: {.callout-important}</span>
-<span id="cb6-474"><a href="#cb6-474" aria-hidden="true" tabindex="-1"></a><span class="fu">## Asymptomatic vs. Symptomatic test result</span></span>
-<span id="cb6-475"><a href="#cb6-475" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-476"><a href="#cb6-476" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**p-value** = <span class="in">`r sprintf(&quot;%.4f&quot;, test1$pval)`</span> (reference: <span class="in">`r sprintf(&quot;%.4f&quot;, ref$test1_p)`</span>)</span>
-<span id="cb6-477"><a href="#cb6-477" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Observed T_max** = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$Tobs)`</span> (reference: <span class="in">`r sprintf(&quot;%.2f&quot;, ref$test1_Tobs)`</span>)</span>
-<span id="cb6-478"><a href="#cb6-478" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Critical value (95%)** = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$crit95)`</span> (reference: <span class="in">`r sprintf(&quot;%.2f&quot;, ref$test1_crit95)`</span>)</span>
-<span id="cb6-479"><a href="#cb6-479" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-480"><a href="#cb6-480" aria-hidden="true" tabindex="-1"></a><span class="in">```{r test1-asserts}</span></span>
-<span id="cb6-481"><a href="#cb6-481" aria-hidden="true" tabindex="-1"></a>tol_p <span class="ot">&lt;-</span> <span class="fl">0.002</span></span>
-<span id="cb6-482"><a href="#cb6-482" aria-hidden="true" tabindex="-1"></a>tol_T <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
-<span id="cb6-483"><a href="#cb6-483" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb6-484"><a href="#cb6-484" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Main test p-value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>pval <span class="sc">-</span> ref<span class="sc">$</span>test1_p) <span class="sc">&lt;</span> tol_p,</span>
-<span id="cb6-485"><a href="#cb6-485" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Observed Tmax out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>Tobs <span class="sc">-</span> ref<span class="sc">$</span>test1_Tobs) <span class="sc">&lt;</span> tol_T,</span>
-<span id="cb6-486"><a href="#cb6-486" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;95% critical value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>crit95 <span class="sc">-</span> ref<span class="sc">$</span>test1_crit95) <span class="sc">&lt;</span> tol_T</span>
-<span id="cb6-487"><a href="#cb6-487" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-488"><a href="#cb6-488" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-489"><a href="#cb6-489" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb6-490"><a href="#cb6-490" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-491"><a href="#cb6-491" aria-hidden="true" tabindex="-1"></a>With <span class="in">`T_max`</span> = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$Tobs)`</span> well above the 95% critical value</span>
-<span id="cb6-492"><a href="#cb6-492" aria-hidden="true" tabindex="-1"></a>(<span class="in">`r sprintf(&quot;%.2f&quot;, test1$crit95)`</span>) and a p-value of <span class="in">`r sprintf(&quot;%.4f&quot;, test1$pval)`</span>,</span>
-<span id="cb6-493"><a href="#cb6-493" aria-hidden="true" tabindex="-1"></a>the null hypothesis of functional equality between the mean H1 landscapes of</span>
-<span id="cb6-494"><a href="#cb6-494" aria-hidden="true" tabindex="-1"></a>asymptomatic and symptomatic subjects is rejected: **network topologies differ</span>
-<span id="cb6-495"><a href="#cb6-495" aria-hidden="true" tabindex="-1"></a>statistically significantly between the two groups.**</span>
-<span id="cb6-496"><a href="#cb6-496" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-497"><a href="#cb6-497" aria-hidden="true" tabindex="-1"></a><span class="fu">## Split-half validation (test calibration)</span></span>
-<span id="cb6-498"><a href="#cb6-498" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-499"><a href="#cb6-499" aria-hidden="true" tabindex="-1"></a>If the permutation test is well calibrated, randomly splitting **the same</span>
-<span id="cb6-500"><a href="#cb6-500" aria-hidden="true" tabindex="-1"></a>group** into two halves and comparing them against each other should yield</span>
-<span id="cb6-501"><a href="#cb6-501" aria-hidden="true" tabindex="-1"></a>p-values approximately uniformly distributed on <span class="co">[</span><span class="ot">0, 1</span><span class="co">]</span> — that is, equality</span>
-<span id="cb6-502"><a href="#cb6-502" aria-hidden="true" tabindex="-1"></a>should not be rejected more often than the nominal level (5%). This is checked</span>
-<span id="cb6-503"><a href="#cb6-503" aria-hidden="true" tabindex="-1"></a>exhaustively by considering **all** possible partitions of each group:</span>
-<span id="cb6-504"><a href="#cb6-504" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-505"><a href="#cb6-505" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-table}</span></span>
-<span id="cb6-506"><a href="#cb6-506" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: &quot;Summary of the split-half validation by group&quot;</span></span>
-<span id="cb6-507"><a href="#cb6-507" aria-hidden="true" tabindex="-1"></a>splithalf_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb6-508"><a href="#cb6-508" aria-hidden="true" tabindex="-1"></a>  <span class="at">Group =</span> <span class="fu">c</span>(<span class="st">&quot;Symptomatic (126 splits, 4 vs 5)&quot;</span>, <span class="st">&quot;Asymptomatic (70 splits, 4 vs 4)&quot;</span>),</span>
-<span id="cb6-509"><a href="#cb6-509" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">mean p-value</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS), <span class="fu">mean</span>(pvalsA))),</span>
-<span id="cb6-510"><a href="#cb6-510" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">sd(p-value)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">sd</span>(pvalsS), <span class="fu">sd</span>(pvalsA))),</span>
-<span id="cb6-511"><a href="#cb6-511" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">% splits with p &lt; 0.05</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>)) <span class="sc">*</span> <span class="dv">100</span>),</span>
-<span id="cb6-512"><a href="#cb6-512" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-513"><a href="#cb6-513" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-514"><a href="#cb6-514" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(splithalf_summary, <span class="at">align =</span> <span class="st">&quot;lrrr&quot;</span>)</span>
-<span id="cb6-515"><a href="#cb6-515" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-516"><a href="#cb6-516" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-517"><a href="#cb6-517" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-hist}</span></span>
-<span id="cb6-518"><a href="#cb6-518" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: &quot;Distribution of split-half p-values, by group (dashed line at p = 0.05)&quot;</span></span>
-<span id="cb6-519"><a href="#cb6-519" aria-hidden="true" tabindex="-1"></a>histS <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsS), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
-<span id="cb6-520"><a href="#cb6-520" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_symp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-521"><a href="#cb6-521" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-522"><a href="#cb6-522" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Symptomatic (126 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-523"><a href="#cb6-523" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
-<span id="cb6-524"><a href="#cb6-524" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-525"><a href="#cb6-525" aria-hidden="true" tabindex="-1"></a>histA <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsA), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
-<span id="cb6-526"><a href="#cb6-526" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_asymp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-527"><a href="#cb6-527" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-528"><a href="#cb6-528" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Asymptomatic (70 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
-<span id="cb6-529"><a href="#cb6-529" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
-<span id="cb6-530"><a href="#cb6-530" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-531"><a href="#cb6-531" aria-hidden="true" tabindex="-1"></a>histA <span class="sc">+</span> histS</span>
-<span id="cb6-532"><a href="#cb6-532" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-533"><a href="#cb6-533" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-534"><a href="#cb6-534" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse=&quot;true&quot;}</span>
-<span id="cb6-535"><a href="#cb6-535" aria-hidden="true" tabindex="-1"></a><span class="fu">## Acceptance criteria — split-half (baseline vs. recomputed)</span></span>
-<span id="cb6-536"><a href="#cb6-536" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-537"><a href="#cb6-537" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Metric <span class="pp">|</span> Reference <span class="pp">|</span> Recomputed <span class="pp">|</span></span>
-<span id="cb6-538"><a href="#cb6-538" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---:|---:|</span></span>
-<span id="cb6-539"><a href="#cb6-539" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — mean p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$symp_mean)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, mean(pvalsS))`</span> <span class="pp">|</span></span>
-<span id="cb6-540"><a href="#cb6-540" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — sd p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$symp_sd)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, sd(pvalsS))`</span> <span class="pp">|</span></span>
-<span id="cb6-541"><a href="#cb6-541" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — % p &lt; 0.05 <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, ref$symp_frac05)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsS &lt; 0.05) * 100)`</span> <span class="pp">|</span></span>
-<span id="cb6-542"><a href="#cb6-542" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — mean p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$asymp_mean)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, mean(pvalsA))`</span> <span class="pp">|</span></span>
-<span id="cb6-543"><a href="#cb6-543" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — sd p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$asymp_sd)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, sd(pvalsA))`</span> <span class="pp">|</span></span>
-<span id="cb6-544"><a href="#cb6-544" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — % p &lt; 0.05 <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, ref$asymp_frac05)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsA &lt; 0.05) * 100)`</span> <span class="pp">|</span></span>
-<span id="cb6-545"><a href="#cb6-545" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-546"><a href="#cb6-546" aria-hidden="true" tabindex="-1"></a>These quantities are Monte Carlo estimates (<span class="in">`nperm = 10000`</span> per split)</span>
-<span id="cb6-547"><a href="#cb6-547" aria-hidden="true" tabindex="-1"></a>aggregated over dozens of partitions, so variation of this kind is expected</span>
-<span id="cb6-548"><a href="#cb6-548" aria-hidden="true" tabindex="-1"></a>relative to the baseline even when reproducing the algorithm exactly — in</span>
-<span id="cb6-549"><a href="#cb6-549" aria-hidden="true" tabindex="-1"></a>fact, the main test above (computed with the same seed, in the same order)</span>
-<span id="cb6-550"><a href="#cb6-550" aria-hidden="true" tabindex="-1"></a>reproduces the reference p-value exactly, and <span class="in">`vtperm`</span> was validated</span>
-<span id="cb6-551"><a href="#cb6-551" aria-hidden="true" tabindex="-1"></a>bit-for-bit against <span class="in">`tperm.fd`</span>. That is why the tolerance here is looser than</span>
-<span id="cb6-552"><a href="#cb6-552" aria-hidden="true" tabindex="-1"></a>in the main test.</span>
-<span id="cb6-553"><a href="#cb6-553" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-554"><a href="#cb6-554" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-asserts}</span></span>
-<span id="cb6-555"><a href="#cb6-555" aria-hidden="true" tabindex="-1"></a>tol_mean <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
-<span id="cb6-556"><a href="#cb6-556" aria-hidden="true" tabindex="-1"></a>tol_sd   <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
-<span id="cb6-557"><a href="#cb6-557" aria-hidden="true" tabindex="-1"></a>tol_frac <span class="ot">&lt;-</span> <span class="fl">2.0</span>  <span class="co"># percentage points</span></span>
-<span id="cb6-558"><a href="#cb6-558" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
-<span id="cb6-559"><a href="#cb6-559" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic mean p out of tolerance&quot;</span>  <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_mean) <span class="sc">&lt;</span> tol_mean,</span>
-<span id="cb6-560"><a href="#cb6-560" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic sd p out of tolerance&quot;</span>    <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_sd) <span class="sc">&lt;</span> tol_sd,</span>
-<span id="cb6-561"><a href="#cb6-561" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>symp_frac05) <span class="sc">&lt;</span> tol_frac,</span>
-<span id="cb6-562"><a href="#cb6-562" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic mean p out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_mean) <span class="sc">&lt;</span> tol_mean,</span>
-<span id="cb6-563"><a href="#cb6-563" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic sd p out of tolerance&quot;</span>   <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_sd) <span class="sc">&lt;</span> tol_sd,</span>
-<span id="cb6-564"><a href="#cb6-564" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>asymp_frac05) <span class="sc">&lt;</span> tol_frac</span>
-<span id="cb6-565"><a href="#cb6-565" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-566"><a href="#cb6-566" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-567"><a href="#cb6-567" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb6-568"><a href="#cb6-568" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-569"><a href="#cb6-569" aria-hidden="true" tabindex="-1"></a>In both groups, the fraction of splits with p &lt; 0.05 (<span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsS &lt; 0.05) * 100)`</span></span>
-<span id="cb6-570"><a href="#cb6-570" aria-hidden="true" tabindex="-1"></a>symptomatic, <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsA &lt; 0.05) * 100)`</span> asymptomatic) is</span>
-<span id="cb6-571"><a href="#cb6-571" aria-hidden="true" tabindex="-1"></a>consistent with the nominal 5% expected under H0, and mean p-values hover</span>
-<span id="cb6-572"><a href="#cb6-572" aria-hidden="true" tabindex="-1"></a>around 0.5 — the test does **not** produce systematic false positives when</span>
-<span id="cb6-573"><a href="#cb6-573" aria-hidden="true" tabindex="-1"></a>comparing sub-samples of the same group, which calibrates the significance</span>
-<span id="cb6-574"><a href="#cb6-574" aria-hidden="true" tabindex="-1"></a>reported for the asymptomatic–symptomatic contrast in the previous section.</span>
-<span id="cb6-575"><a href="#cb6-575" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-576"><a href="#cb6-576" aria-hidden="true" tabindex="-1"></a><span class="fu">## Appendix</span></span>
-<span id="cb6-577"><a href="#cb6-577" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-578"><a href="#cb6-578" aria-hidden="true" tabindex="-1"></a><span class="fu">### Validation of the `landscape(..., KK = 1)` reimplementation</span></span>
-<span id="cb6-579"><a href="#cb6-579" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-580"><a href="#cb6-580" aria-hidden="true" tabindex="-1"></a><span class="in">```{r landscape-validation}</span></span>
-<span id="cb6-581"><a href="#cb6-581" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb6-582"><a href="#cb6-582" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
-<span id="cb6-583"><a href="#cb6-583" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TDA)</span>
-<span id="cb6-584"><a href="#cb6-584" aria-hidden="true" tabindex="-1"></a>tseq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">500</span>)</span>
-<span id="cb6-585"><a href="#cb6-585" aria-hidden="true" tabindex="-1"></a>maxdiff <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb6-586"><a href="#cb6-586" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> ph_files) {</span>
-<span id="cb6-587"><a href="#cb6-587" aria-hidden="true" tabindex="-1"></a>  PH <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-588"><a href="#cb6-588" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(PH) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>, <span class="st">&quot;dimension&quot;</span>)</span>
-<span id="cb6-589"><a href="#cb6-589" aria-hidden="true" tabindex="-1"></a>  PHm <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(PH[<span class="fu">c</span>(<span class="st">&quot;dimension&quot;</span>, <span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>)])</span>
-<span id="cb6-590"><a href="#cb6-590" aria-hidden="true" tabindex="-1"></a>  ref_landscape  <span class="ot">&lt;-</span> <span class="fu">landscape</span>(PHm, <span class="at">dimension =</span> <span class="dv">1</span>, <span class="at">KK =</span> <span class="dv">1</span>, tseq)</span>
-<span id="cb6-591"><a href="#cb6-591" aria-hidden="true" tabindex="-1"></a>  mine_landscape <span class="ot">&lt;-</span> <span class="fu">r_landscape1</span>(PH, <span class="at">dim =</span> <span class="dv">1</span>, <span class="at">tseq =</span> tseq)</span>
-<span id="cb6-592"><a href="#cb6-592" aria-hidden="true" tabindex="-1"></a>  maxdiff <span class="ot">&lt;-</span> <span class="fu">max</span>(maxdiff, <span class="fu">max</span>(<span class="fu">abs</span>(ref_landscape <span class="sc">-</span> mine_landscape)))</span>
-<span id="cb6-593"><a href="#cb6-593" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb6-594"><a href="#cb6-594" aria-hidden="true" tabindex="-1"></a>maxdiff  <span class="co"># 0 across the 17 subjects</span></span>
-<span id="cb6-595"><a href="#cb6-595" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-596"><a href="#cb6-596" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-597"><a href="#cb6-597" aria-hidden="true" tabindex="-1"></a><span class="fu">### Validation of `vtperm` against `tperm.fd`</span></span>
-<span id="cb6-598"><a href="#cb6-598" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-599"><a href="#cb6-599" aria-hidden="true" tabindex="-1"></a><span class="in">```{r vtperm-validation}</span></span>
-<span id="cb6-600"><a href="#cb6-600" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb6-601"><a href="#cb6-601" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
-<span id="cb6-602"><a href="#cb6-602" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb6-603"><a href="#cb6-603" aria-hidden="true" tabindex="-1"></a>ref_test  <span class="ot">&lt;-</span> <span class="fu">tperm.fd</span>(fdAsymp, fdSymp, <span class="at">nperm =</span> <span class="dv">500</span>, <span class="at">q =</span> <span class="fl">0.05</span>, <span class="at">plotres =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-604"><a href="#cb6-604" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb6-605"><a href="#cb6-605" aria-hidden="true" tabindex="-1"></a>mine_test <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(<span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp)),</span>
-<span id="cb6-606"><a href="#cb6-606" aria-hidden="true" tabindex="-1"></a>                     <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">500</span>)</span>
-<span id="cb6-607"><a href="#cb6-607" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>pval, mine_test<span class="sc">$</span>pval)) <span class="co"># TRUE</span></span>
-<span id="cb6-608"><a href="#cb6-608" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>Tobs, mine_test<span class="sc">$</span>Tobs)) <span class="co"># TRUE</span></span>
-<span id="cb6-609"><a href="#cb6-609" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-610"><a href="#cb6-610" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-611"><a href="#cb6-611" aria-hidden="true" tabindex="-1"></a><span class="fu">### Full code (reproducible)</span></span>
-<span id="cb6-612"><a href="#cb6-612" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-613"><a href="#cb6-613" aria-hidden="true" tabindex="-1"></a><span class="in">```{r all-code}</span></span>
-<span id="cb6-614"><a href="#cb6-614" aria-hidden="true" tabindex="-1"></a><span class="co">#| ref.label: !expr knitr::all_labels()</span></span>
-<span id="cb6-615"><a href="#cb6-615" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
-<span id="cb6-616"><a href="#cb6-616" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb6-617"><a href="#cb6-617" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb6-618"><a href="#cb6-618" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-619"><a href="#cb6-619" aria-hidden="true" tabindex="-1"></a><span class="fu">### Session information</span></span>
+<span id="cb6-473"><a href="#cb6-473" aria-hidden="true" tabindex="-1"></a>test1  <span class="ot">&lt;-</span> cached<span class="sc">$</span>test1</span>
+<span id="cb6-474"><a href="#cb6-474" aria-hidden="true" tabindex="-1"></a>pvalsS <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsS</span>
+<span id="cb6-475"><a href="#cb6-475" aria-hidden="true" tabindex="-1"></a>pvalsA <span class="ot">&lt;-</span> cached<span class="sc">$</span>pvalsA</span>
+<span id="cb6-476"><a href="#cb6-476" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-477"><a href="#cb6-477" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-478"><a href="#cb6-478" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 126 symptomatic splits (combn(9,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsS) <span class="sc">==</span> <span class="dv">126</span>,</span>
+<span id="cb6-479"><a href="#cb6-479" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Expected 70 asymptomatic splits (combn(8,4))&quot;</span> <span class="ot">=</span> <span class="fu">length</span>(pvalsA) <span class="sc">==</span> <span class="dv">70</span></span>
+<span id="cb6-480"><a href="#cb6-480" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-481"><a href="#cb6-481" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-482"><a href="#cb6-482" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-483"><a href="#cb6-483" aria-hidden="true" tabindex="-1"></a>::: {.callout-important}</span>
+<span id="cb6-484"><a href="#cb6-484" aria-hidden="true" tabindex="-1"></a><span class="fu">## Asymptomatic vs. Symptomatic test result</span></span>
+<span id="cb6-485"><a href="#cb6-485" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-486"><a href="#cb6-486" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**p-value** = <span class="in">`r sprintf(&quot;%.4f&quot;, test1$pval)`</span> (reference: <span class="in">`r sprintf(&quot;%.4f&quot;, ref$test1_p)`</span>)</span>
+<span id="cb6-487"><a href="#cb6-487" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Observed T_max** = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$Tobs)`</span> (reference: <span class="in">`r sprintf(&quot;%.2f&quot;, ref$test1_Tobs)`</span>)</span>
+<span id="cb6-488"><a href="#cb6-488" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Critical value (95%)** = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$crit95)`</span> (reference: <span class="in">`r sprintf(&quot;%.2f&quot;, ref$test1_crit95)`</span>)</span>
+<span id="cb6-489"><a href="#cb6-489" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-490"><a href="#cb6-490" aria-hidden="true" tabindex="-1"></a><span class="in">```{r test1-asserts}</span></span>
+<span id="cb6-491"><a href="#cb6-491" aria-hidden="true" tabindex="-1"></a>tol_p <span class="ot">&lt;-</span> <span class="fl">0.002</span></span>
+<span id="cb6-492"><a href="#cb6-492" aria-hidden="true" tabindex="-1"></a>tol_T <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
+<span id="cb6-493"><a href="#cb6-493" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-494"><a href="#cb6-494" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Main test p-value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>pval <span class="sc">-</span> ref<span class="sc">$</span>test1_p) <span class="sc">&lt;</span> tol_p,</span>
+<span id="cb6-495"><a href="#cb6-495" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Observed Tmax out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>Tobs <span class="sc">-</span> ref<span class="sc">$</span>test1_Tobs) <span class="sc">&lt;</span> tol_T,</span>
+<span id="cb6-496"><a href="#cb6-496" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;95% critical value out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(test1<span class="sc">$</span>crit95 <span class="sc">-</span> ref<span class="sc">$</span>test1_crit95) <span class="sc">&lt;</span> tol_T</span>
+<span id="cb6-497"><a href="#cb6-497" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-498"><a href="#cb6-498" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-499"><a href="#cb6-499" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb6-500"><a href="#cb6-500" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-501"><a href="#cb6-501" aria-hidden="true" tabindex="-1"></a>With <span class="in">`T_max`</span> = <span class="in">`r sprintf(&quot;%.2f&quot;, test1$Tobs)`</span> well above the 95% critical value</span>
+<span id="cb6-502"><a href="#cb6-502" aria-hidden="true" tabindex="-1"></a>(<span class="in">`r sprintf(&quot;%.2f&quot;, test1$crit95)`</span>) and a p-value of <span class="in">`r sprintf(&quot;%.4f&quot;, test1$pval)`</span>,</span>
+<span id="cb6-503"><a href="#cb6-503" aria-hidden="true" tabindex="-1"></a>the null hypothesis of functional equality between the mean H1 landscapes of</span>
+<span id="cb6-504"><a href="#cb6-504" aria-hidden="true" tabindex="-1"></a>asymptomatic and symptomatic subjects is rejected: **network topologies differ</span>
+<span id="cb6-505"><a href="#cb6-505" aria-hidden="true" tabindex="-1"></a>statistically significantly between the two groups.**</span>
+<span id="cb6-506"><a href="#cb6-506" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-507"><a href="#cb6-507" aria-hidden="true" tabindex="-1"></a><span class="fu">## Split-half validation (test calibration)</span></span>
+<span id="cb6-508"><a href="#cb6-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-509"><a href="#cb6-509" aria-hidden="true" tabindex="-1"></a>If the permutation test is well calibrated, randomly splitting **the same</span>
+<span id="cb6-510"><a href="#cb6-510" aria-hidden="true" tabindex="-1"></a>group** into two halves and comparing them against each other should yield</span>
+<span id="cb6-511"><a href="#cb6-511" aria-hidden="true" tabindex="-1"></a>p-values approximately uniformly distributed on <span class="co">[</span><span class="ot">0, 1</span><span class="co">]</span> — that is, equality</span>
+<span id="cb6-512"><a href="#cb6-512" aria-hidden="true" tabindex="-1"></a>should not be rejected more often than the nominal level (5%). This is checked</span>
+<span id="cb6-513"><a href="#cb6-513" aria-hidden="true" tabindex="-1"></a>exhaustively by considering **all** possible partitions of each group:</span>
+<span id="cb6-514"><a href="#cb6-514" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-515"><a href="#cb6-515" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-table}</span></span>
+<span id="cb6-516"><a href="#cb6-516" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: &quot;Summary of the split-half validation by group&quot;</span></span>
+<span id="cb6-517"><a href="#cb6-517" aria-hidden="true" tabindex="-1"></a>splithalf_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-518"><a href="#cb6-518" aria-hidden="true" tabindex="-1"></a>  <span class="at">Group =</span> <span class="fu">c</span>(<span class="st">&quot;Symptomatic (126 splits, 4 vs 5)&quot;</span>, <span class="st">&quot;Asymptomatic (70 splits, 4 vs 4)&quot;</span>),</span>
+<span id="cb6-519"><a href="#cb6-519" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">mean p-value</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS), <span class="fu">mean</span>(pvalsA))),</span>
+<span id="cb6-520"><a href="#cb6-520" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">sd(p-value)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, <span class="fu">c</span>(<span class="fu">sd</span>(pvalsS), <span class="fu">sd</span>(pvalsA))),</span>
+<span id="cb6-521"><a href="#cb6-521" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">% splits with p &lt; 0.05</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, <span class="fu">c</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>)) <span class="sc">*</span> <span class="dv">100</span>),</span>
+<span id="cb6-522"><a href="#cb6-522" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-523"><a href="#cb6-523" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-524"><a href="#cb6-524" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(splithalf_summary, <span class="at">align =</span> <span class="st">&quot;lrrr&quot;</span>)</span>
+<span id="cb6-525"><a href="#cb6-525" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-526"><a href="#cb6-526" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-527"><a href="#cb6-527" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-hist}</span></span>
+<span id="cb6-528"><a href="#cb6-528" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: &quot;Distribution of split-half p-values, by group (dashed line at p = 0.05)&quot;</span></span>
+<span id="cb6-529"><a href="#cb6-529" aria-hidden="true" tabindex="-1"></a>histS <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsS), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
+<span id="cb6-530"><a href="#cb6-530" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_symp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-531"><a href="#cb6-531" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-532"><a href="#cb6-532" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Symptomatic (126 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-533"><a href="#cb6-533" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
+<span id="cb6-534"><a href="#cb6-534" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-535"><a href="#cb6-535" aria-hidden="true" tabindex="-1"></a>histA <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">p =</span> pvalsA), <span class="fu">aes</span>(<span class="at">x =</span> p)) <span class="sc">+</span></span>
+<span id="cb6-536"><a href="#cb6-536" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.05</span>, <span class="at">boundary =</span> <span class="dv">0</span>, <span class="at">fill =</span> col_asymp, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">color =</span> <span class="st">&quot;white&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-537"><a href="#cb6-537" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fl">0.05</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-538"><a href="#cb6-538" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Asymptomatic (70 splits)&quot;</span>, <span class="at">x =</span> <span class="st">&quot;p-value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Frequency&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-539"><a href="#cb6-539" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span>
+<span id="cb6-540"><a href="#cb6-540" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-541"><a href="#cb6-541" aria-hidden="true" tabindex="-1"></a>histA <span class="sc">+</span> histS</span>
+<span id="cb6-542"><a href="#cb6-542" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-543"><a href="#cb6-543" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-544"><a href="#cb6-544" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse=&quot;true&quot;}</span>
+<span id="cb6-545"><a href="#cb6-545" aria-hidden="true" tabindex="-1"></a><span class="fu">## Acceptance criteria — split-half (baseline vs. recomputed)</span></span>
+<span id="cb6-546"><a href="#cb6-546" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-547"><a href="#cb6-547" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Metric <span class="pp">|</span> Reference <span class="pp">|</span> Recomputed <span class="pp">|</span></span>
+<span id="cb6-548"><a href="#cb6-548" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---:|---:|</span></span>
+<span id="cb6-549"><a href="#cb6-549" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — mean p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$symp_mean)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, mean(pvalsS))`</span> <span class="pp">|</span></span>
+<span id="cb6-550"><a href="#cb6-550" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — sd p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$symp_sd)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, sd(pvalsS))`</span> <span class="pp">|</span></span>
+<span id="cb6-551"><a href="#cb6-551" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Symptomatic — % p &lt; 0.05 <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, ref$symp_frac05)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsS &lt; 0.05) * 100)`</span> <span class="pp">|</span></span>
+<span id="cb6-552"><a href="#cb6-552" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — mean p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$asymp_mean)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, mean(pvalsA))`</span> <span class="pp">|</span></span>
+<span id="cb6-553"><a href="#cb6-553" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — sd p <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, ref$asymp_sd)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.3f&quot;, sd(pvalsA))`</span> <span class="pp">|</span></span>
+<span id="cb6-554"><a href="#cb6-554" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Asymptomatic — % p &lt; 0.05 <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, ref$asymp_frac05)`</span> <span class="pp">|</span> <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsA &lt; 0.05) * 100)`</span> <span class="pp">|</span></span>
+<span id="cb6-555"><a href="#cb6-555" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-556"><a href="#cb6-556" aria-hidden="true" tabindex="-1"></a>These quantities are Monte Carlo estimates (<span class="in">`nperm = 10000`</span> per split)</span>
+<span id="cb6-557"><a href="#cb6-557" aria-hidden="true" tabindex="-1"></a>aggregated over dozens of partitions, so variation of this kind is expected</span>
+<span id="cb6-558"><a href="#cb6-558" aria-hidden="true" tabindex="-1"></a>relative to the baseline even when reproducing the algorithm exactly — in</span>
+<span id="cb6-559"><a href="#cb6-559" aria-hidden="true" tabindex="-1"></a>fact, the main test above (computed with the same seed, in the same order)</span>
+<span id="cb6-560"><a href="#cb6-560" aria-hidden="true" tabindex="-1"></a>reproduces the reference p-value exactly, and <span class="in">`vtperm`</span> was validated</span>
+<span id="cb6-561"><a href="#cb6-561" aria-hidden="true" tabindex="-1"></a>bit-for-bit against <span class="in">`tperm.fd`</span>. That is why the tolerance here is looser than</span>
+<span id="cb6-562"><a href="#cb6-562" aria-hidden="true" tabindex="-1"></a>in the main test.</span>
+<span id="cb6-563"><a href="#cb6-563" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-564"><a href="#cb6-564" aria-hidden="true" tabindex="-1"></a><span class="in">```{r splithalf-asserts}</span></span>
+<span id="cb6-565"><a href="#cb6-565" aria-hidden="true" tabindex="-1"></a>tol_mean <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb6-566"><a href="#cb6-566" aria-hidden="true" tabindex="-1"></a>tol_sd   <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb6-567"><a href="#cb6-567" aria-hidden="true" tabindex="-1"></a>tol_frac <span class="ot">&lt;-</span> <span class="fl">2.0</span>  <span class="co"># percentage points</span></span>
+<span id="cb6-568"><a href="#cb6-568" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-569"><a href="#cb6-569" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic mean p out of tolerance&quot;</span>  <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_mean) <span class="sc">&lt;</span> tol_mean,</span>
+<span id="cb6-570"><a href="#cb6-570" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic sd p out of tolerance&quot;</span>    <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsS) <span class="sc">-</span> ref<span class="sc">$</span>symp_sd) <span class="sc">&lt;</span> tol_sd,</span>
+<span id="cb6-571"><a href="#cb6-571" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Symptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsS <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>symp_frac05) <span class="sc">&lt;</span> tol_frac,</span>
+<span id="cb6-572"><a href="#cb6-572" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic mean p out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_mean) <span class="sc">&lt;</span> tol_mean,</span>
+<span id="cb6-573"><a href="#cb6-573" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic sd p out of tolerance&quot;</span>   <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">sd</span>(pvalsA) <span class="sc">-</span> ref<span class="sc">$</span>asymp_sd) <span class="sc">&lt;</span> tol_sd,</span>
+<span id="cb6-574"><a href="#cb6-574" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Asymptomatic frac&lt;0.05 out of tolerance&quot;</span> <span class="ot">=</span> <span class="fu">abs</span>(<span class="fu">mean</span>(pvalsA <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">*</span> <span class="dv">100</span> <span class="sc">-</span> ref<span class="sc">$</span>asymp_frac05) <span class="sc">&lt;</span> tol_frac</span>
+<span id="cb6-575"><a href="#cb6-575" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-576"><a href="#cb6-576" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-577"><a href="#cb6-577" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb6-578"><a href="#cb6-578" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-579"><a href="#cb6-579" aria-hidden="true" tabindex="-1"></a>In both groups, the fraction of splits with p &lt; 0.05 (<span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsS &lt; 0.05) * 100)`</span></span>
+<span id="cb6-580"><a href="#cb6-580" aria-hidden="true" tabindex="-1"></a>symptomatic, <span class="in">`r sprintf(&quot;%.1f%%&quot;, mean(pvalsA &lt; 0.05) * 100)`</span> asymptomatic) is</span>
+<span id="cb6-581"><a href="#cb6-581" aria-hidden="true" tabindex="-1"></a>consistent with the nominal 5% expected under H0, and mean p-values hover</span>
+<span id="cb6-582"><a href="#cb6-582" aria-hidden="true" tabindex="-1"></a>around 0.5 — the test does **not** produce systematic false positives when</span>
+<span id="cb6-583"><a href="#cb6-583" aria-hidden="true" tabindex="-1"></a>comparing sub-samples of the same group, which calibrates the significance</span>
+<span id="cb6-584"><a href="#cb6-584" aria-hidden="true" tabindex="-1"></a>reported for the asymptomatic–symptomatic contrast in the previous section.</span>
+<span id="cb6-585"><a href="#cb6-585" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-586"><a href="#cb6-586" aria-hidden="true" tabindex="-1"></a><span class="fu">## Appendix</span></span>
+<span id="cb6-587"><a href="#cb6-587" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-588"><a href="#cb6-588" aria-hidden="true" tabindex="-1"></a><span class="fu">### Validation of the `landscape(..., KK = 1)` reimplementation</span></span>
+<span id="cb6-589"><a href="#cb6-589" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-590"><a href="#cb6-590" aria-hidden="true" tabindex="-1"></a><span class="in">```{r landscape-validation}</span></span>
+<span id="cb6-591"><a href="#cb6-591" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb6-592"><a href="#cb6-592" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb6-593"><a href="#cb6-593" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(TDA)</span>
+<span id="cb6-594"><a href="#cb6-594" aria-hidden="true" tabindex="-1"></a>tseq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> <span class="dv">500</span>)</span>
+<span id="cb6-595"><a href="#cb6-595" aria-hidden="true" tabindex="-1"></a>maxdiff <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb6-596"><a href="#cb6-596" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> ph_files) {</span>
+<span id="cb6-597"><a href="#cb6-597" aria-hidden="true" tabindex="-1"></a>  PH <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(f, <span class="at">header =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-598"><a href="#cb6-598" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(PH) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>, <span class="st">&quot;dimension&quot;</span>)</span>
+<span id="cb6-599"><a href="#cb6-599" aria-hidden="true" tabindex="-1"></a>  PHm <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(PH[<span class="fu">c</span>(<span class="st">&quot;dimension&quot;</span>, <span class="st">&quot;Birth&quot;</span>, <span class="st">&quot;Death&quot;</span>)])</span>
+<span id="cb6-600"><a href="#cb6-600" aria-hidden="true" tabindex="-1"></a>  ref_landscape  <span class="ot">&lt;-</span> <span class="fu">landscape</span>(PHm, <span class="at">dimension =</span> <span class="dv">1</span>, <span class="at">KK =</span> <span class="dv">1</span>, tseq)</span>
+<span id="cb6-601"><a href="#cb6-601" aria-hidden="true" tabindex="-1"></a>  mine_landscape <span class="ot">&lt;-</span> <span class="fu">r_landscape1</span>(PH, <span class="at">dim =</span> <span class="dv">1</span>, <span class="at">tseq =</span> tseq)</span>
+<span id="cb6-602"><a href="#cb6-602" aria-hidden="true" tabindex="-1"></a>  maxdiff <span class="ot">&lt;-</span> <span class="fu">max</span>(maxdiff, <span class="fu">max</span>(<span class="fu">abs</span>(ref_landscape <span class="sc">-</span> mine_landscape)))</span>
+<span id="cb6-603"><a href="#cb6-603" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-604"><a href="#cb6-604" aria-hidden="true" tabindex="-1"></a>maxdiff  <span class="co"># 0 across the 17 subjects</span></span>
+<span id="cb6-605"><a href="#cb6-605" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-606"><a href="#cb6-606" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-607"><a href="#cb6-607" aria-hidden="true" tabindex="-1"></a><span class="fu">### Validation of `vtperm` against `tperm.fd`</span></span>
+<span id="cb6-608"><a href="#cb6-608" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-609"><a href="#cb6-609" aria-hidden="true" tabindex="-1"></a><span class="in">```{r vtperm-validation}</span></span>
+<span id="cb6-610"><a href="#cb6-610" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb6-611"><a href="#cb6-611" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb6-612"><a href="#cb6-612" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb6-613"><a href="#cb6-613" aria-hidden="true" tabindex="-1"></a>ref_test  <span class="ot">&lt;-</span> <span class="fu">tperm.fd</span>(fdAsymp, fdSymp, <span class="at">nperm =</span> <span class="dv">500</span>, <span class="at">q =</span> <span class="fl">0.05</span>, <span class="at">plotres =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-614"><a href="#cb6-614" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb6-615"><a href="#cb6-615" aria-hidden="true" tabindex="-1"></a>mine_test <span class="ot">&lt;-</span> <span class="fu">vtperm</span>(<span class="fu">cbind</span>(<span class="fu">eval.fd</span>(argvals, fdAsymp), <span class="fu">eval.fd</span>(argvals, fdSymp)),</span>
+<span id="cb6-616"><a href="#cb6-616" aria-hidden="true" tabindex="-1"></a>                     <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>, <span class="dv">9</span><span class="sc">:</span><span class="dv">17</span>, <span class="at">nperm =</span> <span class="dv">500</span>)</span>
+<span id="cb6-617"><a href="#cb6-617" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>pval, mine_test<span class="sc">$</span>pval)) <span class="co"># TRUE</span></span>
+<span id="cb6-618"><a href="#cb6-618" aria-hidden="true" tabindex="-1"></a><span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(ref_test<span class="sc">$</span>Tobs, mine_test<span class="sc">$</span>Tobs)) <span class="co"># TRUE</span></span>
+<span id="cb6-619"><a href="#cb6-619" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb6-620"><a href="#cb6-620" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-621"><a href="#cb6-621" aria-hidden="true" tabindex="-1"></a><span class="in">```{r session-info}</span></span>
-<span id="cb6-622"><a href="#cb6-622" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
-<span id="cb6-623"><a href="#cb6-623" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
-<span id="cb6-624"><a href="#cb6-624" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></div>
+<span id="cb6-621"><a href="#cb6-621" aria-hidden="true" tabindex="-1"></a><span class="fu">### Full code (reproducible)</span></span>
+<span id="cb6-622"><a href="#cb6-622" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-623"><a href="#cb6-623" aria-hidden="true" tabindex="-1"></a><span class="in">```{r all-code}</span></span>
+<span id="cb6-624"><a href="#cb6-624" aria-hidden="true" tabindex="-1"></a><span class="co">#| ref.label: !expr knitr::all_labels()</span></span>
+<span id="cb6-625"><a href="#cb6-625" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb6-626"><a href="#cb6-626" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb6-627"><a href="#cb6-627" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-628"><a href="#cb6-628" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-629"><a href="#cb6-629" aria-hidden="true" tabindex="-1"></a><span class="fu">### Session information</span></span>
+<span id="cb6-630"><a href="#cb6-630" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-631"><a href="#cb6-631" aria-hidden="true" tabindex="-1"></a><span class="in">```{r session-info}</span></span>
+<span id="cb6-632"><a href="#cb6-632" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: true</span></span>
+<span id="cb6-633"><a href="#cb6-633" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb6-634"><a href="#cb6-634" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
