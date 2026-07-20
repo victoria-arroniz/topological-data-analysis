@@ -1,0 +1,15 @@
+# Python dependencies for funTDA/analysis/funTDA.ipynb (Part A) only.
+# Kept separate from requirements.txt because giotto-tda is sensitive to the
+# installed numpy version; install in its own environment if the numpy
+# version this pins conflicts with requirements.txt's numpy>=1.24.
+# Install with: pip install -r requirements-partA.txt
+#
+# NOTE: the exact upper bounds below are a conservative estimate, not
+# verified against a live package index in this environment (no network
+# access at the time this was written). Confirm against the giotto-tda
+# version you actually install — giotto-tda has historically required
+# numpy<2 — and tighten/relax these pins accordingly before relying on them.
+
+numpy<2.0
+giotto-tda>=0.6,<0.7
+networkx>=3.0,<4.0

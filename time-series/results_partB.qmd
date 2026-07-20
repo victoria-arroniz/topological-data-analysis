@@ -536,7 +536,7 @@ within-regime control splits below are likewise always fully valid.
 
 This is expected given how the two regimes were constructed (one produces
 topological loops, the other does not), but the result itself is new:
-`Example1Beetles.R` never asked this question in a functional-hypothesis-testing
+`Example1Beetles.Rmd` never asked this question in a functional-hypothesis-testing
 sense. It runs two independent classification checks against the true regime
 labels — k-means clustering on the raw series (`cfm`) and a rule based on
 which homology dimension each series' single most persistent bar belongs to

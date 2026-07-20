@@ -28,9 +28,12 @@ files <- files[order(file_numbers)]
 # ================================================================
 DataSymp <- c()
 DataAsymp <- c()
+symp_labels <- c()
+asymp_labels <- c()
 tseq <- seq(0, 1, length.out = 500)
 
-read_landscape <- function(file_path, dim = 1, tseq = tseq) {
+read_landscape <- function(file_path, dim = 1, tseq = NULL) {
+  stopifnot(!is.null(tseq))
   PH <- read.csv(file_path)
   colnames(PH) <- c("Birth", "Death", "dimension")
   PH <- PH[c("dimension", "Birth", "Death")]
@@ -40,22 +43,26 @@ read_landscape <- function(file_path, dim = 1, tseq = tseq) {
 }
 
 for(f in files){
-  x1 <- read_landscape(f, dim = 1, tseq = tseq)
-  
+  x1 <- as.vector(read_landscape(f, dim = 1, tseq = tseq))
+
   # detect group from filename
   fname <- basename(f)
+  id <- get_number(fname)
+  # files is already sorted ascending by id (see above), so appending with
+  # rbind (rather than prepending with cbind) keeps each group's rows in
+  # ascending ID order; labels are derived from that same real ID rather
+  # than hardcoded, so a row's label always matches its source file.
   if(grepl("^Asymptomatic", fname)){
-    DataAsymp <- cbind(x1, DataAsymp)
+    DataAsymp <- rbind(DataAsymp, x1)
+    asymp_labels <- c(asymp_labels, paste0("A", id))
   } else if(grepl("^Symptomatic", fname)){
-    DataSymp <- cbind(x1, DataSymp)
+    DataSymp <- rbind(DataSymp, x1)
+    symp_labels <- c(symp_labels, paste0("S", id))
   } else {
     warning(paste("File not assigned to group:", fname))
   }
 }
 
-
-DataSymp <- t(DataSymp)
-DataAsymp <- t(DataAsymp)
 DataBoth <- rbind(DataAsymp, DataSymp)
 
 # ================================================================
@@ -79,10 +86,9 @@ plot(mean.fd(fdAsymp), main="Mean Asymptomatic Landscape")
 # Functional PCA
 # ================================================================
 pca <- pca.fd(fdBoth, nharm=2)
-m <- c("A1","A2","A3","A4","A5","A6","A7","A8",
-       "S1","S2","S3","S4","S5","S6","S7","S8","S9")
-col.group <- c(rep("black", 8), rep("blue", 9))
-group <- c(rep("Asymptomatic", 8), rep("Symptomatic", 9))
+m <- c(asymp_labels, symp_labels)
+col.group <- c(rep("black", length(asymp_labels)), rep("blue", length(symp_labels)))
+group <- c(rep("Asymptomatic", length(asymp_labels)), rep("Symptomatic", length(symp_labels)))
 
 pca_df <- data.frame(
   PC1 = pca$scores[, 1],
@@ -105,7 +111,7 @@ pca_df <- data.frame(
     coord_fixed() +  
     theme_classic(base_size = 16) +
     theme(
-      legend.position = ifelse(T, "right", "none"),
+      legend.position = "right",
       legend.title = element_blank(),
       plot.title = element_text(hjust = 0.5, face = "bold")
     )
@@ -147,6 +153,14 @@ mean_p
 sd_p
 
 #Test of asymptomatic and asymptomatic
+# combn(1:8, 4) enumerates all 70 4-element subsets of 8 items. Since the
+# complement of a 4-element subset of 8 is also a 4-element subset, every
+# 4-vs-4 partition appears twice here (once as (group1, group2), once as
+# (group2, group1) when its complement is later drawn as group1_idx) — so
+# these 70 runs cover only 35 unique partitions, each tested twice. Not
+# changed here to keep reproducing the baseline numbers; the analogous
+# combn(1:9, 4) loop above does not have this issue (a 4-vs-5 split's
+# 5-element complement is never itself drawn as a 4-element subset).
 splits <- combn(1:8, 4)
 n_splits <- ncol(splits)
 pvals <- numeric(n_splits)

@@ -4,8 +4,9 @@
 numpy>=1.24
 matplotlib>=3.7
 ripser>=0.6       # Vietoris-Rips persistent homology (same Ripser backend as TDAstats/R)
-persim>=0.3       # Persistence diagram tools (optional, for future use)
 jupyter>=1.0      # Jupyter notebook environment
 
-# For funTDA/analysis/funTDA.ipynb (Part A) — requires separate install:
-# pip install giotto-tda networkx
+# For funTDA/analysis/funTDA.ipynb (Part A) — install separately, in its own
+# environment if possible: giotto-tda pins an upper bound on numpy that can
+# conflict with the numpy>=1.24 above. See requirements-partA.txt.
+# pip install -r requirements-partA.txt

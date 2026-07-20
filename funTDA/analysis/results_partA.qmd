@@ -382,12 +382,16 @@ of the variability among landscapes (PC1 $\approx$ `r sprintf("%.1f", pc1_pct)`%
 `r sprintf("%.1f", pc2_pct)`%). In the PC1–PC2 plane, all 8 asymptomatic subjects
 fall in the PC1 > 0 half-plane, while 8 of the 9 symptomatic subjects fall in
 PC1 < 0: **one of the symptomatic subjects** (labeled here in a purely
-positional way — the way `DataAsymp`/`DataSymp` are built in `funTDA.R`
-prepends (`cbind(x1, Data)`) each new network to those already accumulated,
-reversing the order within each group relative to the file ID, so the
-"S1..S9" label should not be read as the subject's real ID without separately
-verifying it) overlaps with the asymptomatic region. PC1 separates the two
-groups reasonably well; PC2 shows no clear separation.
+positional way — the `DataAsymp`/`DataSymp` construction in the
+`landscape-functions` chunk above prepends (`cbind(x1, Data)`) each new
+network to those already accumulated, reversing the order within each group
+relative to the file ID, so the "S1..S9" label should not be read as the
+subject's real ID without separately verifying it. `funTDA.R` was later fixed
+to build these in ascending file-ID order with labels derived from the real
+ID; this document keeps the original prepend-based construction so the
+numbers below continue to match the validated baseline) overlaps with the
+asymptomatic region. PC1 separates the two groups reasonably well; PC2 shows
+no clear separation.
 
 ## Functional permutation test: asymptomatic vs. symptomatic
 
@@ -447,7 +451,13 @@ if (file.exists(cache_file)) {
     pvalsS[i] <- vtperm(XSymp, g1, g2, nperm = 10000)$pval
   }
 
-  # 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions
+  # 3) Asymptomatic split-half: combn(1:8, 4) = 70 4-vs-4 partitions.
+  # Because the complement of a 4-of-8 subset is also a 4-of-8 subset, every
+  # unique 4-vs-4 partition appears twice among these 70 (once with each
+  # half as group1) — 35 unique partitions, each tested twice. Not
+  # collapsed, to keep reproducing the baseline. The symptomatic loop above
+  # (combn(1:9, 4), 4-vs-5) does not have this issue: a 5-element complement
+  # is never itself drawn as a 4-element subset, so all 126 are distinct.
   XAsymp <- eval.fd(argvals, fdAsymp)
   splitsA <- combn(1:8, 4)
   pvalsA <- numeric(ncol(splitsA))

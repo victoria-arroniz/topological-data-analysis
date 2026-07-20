@@ -111,7 +111,6 @@ print('figures/network_to_landscape.png saved')
 # ─── Figure 3: timeseries_to_landscape.png ────────────────────────────────────
 
 def simulate_beetles(u_a, n=200, B=7.48, c_ea=0.009, c_pa=0.004, c_el=0.012, u_l=0.267):
-    np.random.seed(123)
     L, P, A = 10.0, 5.0, 50.0
     series = [A]
     for _ in range(n - 1):
@@ -145,7 +144,11 @@ axes[1, 0].set_ylabel('Adult population (A)')
 axes[1, 0].grid(True, alpha=0.3)
 
 # Landscapes are plotted on INDEPENDENT y-scales: the stable landscapes are
-# ~7x smaller, so a shared axis would flatten them to zero. Own scale + thicker
+# ~7x smaller (max peak among this panel's 40-series subset, not the same
+# quantity as the ~150-fold figure in results_partB.qmd, which is the mean
+# peak across all 200 series per regime — subset-max vs. full-sample-mean
+# behave very differently here because many stable landscapes are exactly
+# zero), so a shared axis would flatten them to zero. Own scale + thicker
 # lines makes the stable structure visible.
 for i in range(40):
     axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.55, linewidth=1.1)
@@ -177,8 +180,11 @@ print('figures/timeseries_to_landscape.png saved')
 # ─── Figure 4: landscapes_individual_dark.png ─────────────────────────────────
 
 # Two panels with INDEPENDENT y-scales. On a shared axis the stable
-# landscapes (~7x smaller) collapse onto zero and are indistinguishable;
-# giving each regime its own scale reveals the stable structure.
+# landscapes (~7x smaller — max peak among this panel's 50-series subset;
+# see the note above the previous figure re: this vs. the ~150-fold
+# full-sample mean-peak figure in results_partB.qmd) collapse onto zero and
+# are indistinguishable; giving each regime its own scale reveals the
+# stable structure.
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
@@ -201,7 +207,9 @@ axes[1].grid(True, alpha=0.3)
 axes[1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:50].max():.2f}',
              transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color='#C85A12')
 
-fig.suptitle('H1 persistence landscapes — note the ~7x difference in vertical scale', fontsize=12)
+fig.suptitle('H1 persistence landscapes — note the ~7x difference in vertical scale\n'
+             '(subset-max peak ratio; see results_partB.qmd for the ~150-fold full-sample mean-peak figure)',
+             fontsize=12)
 
 plt.tight_layout()
 plt.savefig('figures/landscapes_individual_dark.png', dpi=200, bbox_inches='tight')
