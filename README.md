@@ -21,8 +21,11 @@ tda-research/
 │       └── PH/                      # Pre-computed birth–death pairs (CSV)
 │
 ├── time-series/                     # Part B: time series TDA
-│   ├── Example1Beetles.R            # Original R code (simulation + PH)
-│   └── beetles_landscapes.ipynb     # Python: full pipeline incl. landscapes
+│   ├── Example1Beetles.R            # Original R code (simulation + k-means/confusion-matrix check)
+│   ├── beetles_landscapes.ipynb     # Python: simulation, embedding, PH, landscapes
+│   ├── export_landscapes.py         # Exports the notebook's .npy landscapes to output/*.csv
+│   ├── output/                      # stable/aperiodic_landscapes.csv (200x500), tseq.csv
+│   └── results_partB.qmd            # R/knitr: FPCA + permutation test (reads output/*.csv)
 │
 ├── references/
 │   ├── ***REMOVED***                                        # funTDA paper
@@ -77,10 +80,13 @@ R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`, `igraph` (the last 
 | Persistent homology | Vietoris-Rips via `ripser` | Same Ripser backend as `TDAstats` in R |
 | Persistence landscape | H1, first layer, 500 bins | Equivalent to `landscape(PH, dim=1, KK=1, tseq)` in R |
 
+**Reproducible report:** [`results_partB.qmd`](time-series/results_partB.qmd) (rendered: [`results_partB.pdf`](time-series/results_partB.pdf), [`results_partB.html`](time-series/results_partB.html)) picks up where the notebook stops and does the part it explicitly leaves as a "next step": FPCA and a functional permutation test comparing the two regimes, following the same `fda`-based pipeline as Part A. Unlike Part A, this isn't a reproduction of a previously reported number — neither the funTDA paper nor the original `Example1Beetles.R` (which uses k-means + a per-series classification rule, not a functional hypothesis test) runs this analysis, so the document says so explicitly rather than presenting it as a known baseline. [`export_landscapes.py`](time-series/export_landscapes.py) converts the notebook's `.npy` landscape matrices to the CSVs (`time-series/output/`) the report reads; the report itself does not re-simulate or re-run persistent homology (slow, and Python/R RNGs aren't interchangeable anyway).
+
 **Dependencies (Part B):**
 ```
 pip install -r requirements.txt
 ```
+R packages for `results_partB.qmd`: `fda`, `ggplot2`, `patchwork`, `knitr`. Render with `quarto render time-series/results_partB.qmd` (requires [Quarto](https://quarto.org) and `xelatex` for the PDF); delete `time-series/output/results_partB_permtest_cache.rds` to force the permutation tests to recompute (the control-analysis step alone runs 400 permutation tests of 10,000 permutations each, so expect several minutes on a cold cache).
 
 ---
 
