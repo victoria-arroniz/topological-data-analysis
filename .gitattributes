@@ -1,0 +1,4 @@
+# Rendered Quarto reports are generated artifacts (built from the .qmd sources).
+# Excluded from GitHub's language statistics and collapsed in diffs.
+funTDA/analysis/results_partA.html   linguist-generated=true
+time-series/results_partB.html       linguist-generated=true
