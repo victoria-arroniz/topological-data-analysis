@@ -21,3 +21,9 @@ venv/
 *.knit.md
 *_files/
 *_cache/
+
+# Presentation figures: derived artifacts regenerable with `python make_figs.py`.
+# Not versioned so they can't go stale against the code that generates them —
+# this already happened once (figures committed in e3683cc, then make_figs.py
+# changed in 6b245ce without the committed PNGs being regenerated to match).
+figures/
