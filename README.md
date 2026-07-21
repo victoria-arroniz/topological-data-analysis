@@ -17,14 +17,16 @@ topological-data-analysis/
 │   │   └── funTDA.R                 # R: landscapes, FPCA, permutation tests
 │   ├── data/
 │   │   └── GRN_adjacency_matrices/  # 17 adjacency matrices (250×250)
-│   └── output/
-│       └── PH/                      # Pre-computed birth–death pairs (CSV)
+│   ├── output/
+│   │   └── PH/                      # Pre-computed birth–death pairs (CSV)
+│   └── requirements.txt             # Pinned deps for funTDA.ipynb (giotto-tda/numpy), kept separate — see note below
 │
 ├── time-series/                     # Part B: time series TDA
 │   ├── Example1Beetles.Rmd          # Original R Markdown code (simulation + k-means/confusion-matrix check), kept as reference
 │   ├── beetles_landscapes.ipynb     # Python: simulation, embedding, PH, landscapes
 │   ├── export_landscapes.py         # Exports the notebook's .npy landscapes to output/*.csv
 │   ├── output/                      # stable/aperiodic_landscapes.csv (200x500), tseq.csv
+│   ├── requirements.txt             # Pinned deps for beetles_landscapes.ipynb
 │   └── results_partB.qmd            # R/knitr: FPCA + permutation test (reads output/*.csv)
 │
 ├── references/
@@ -32,10 +34,14 @@ topological-data-analysis/
 │   ├── ***REMOVED***
 │   └── ***REMOVED***                                           # Pereira & de Mello (2015)
 │
-├── requirements.txt
-├── requirements-partA.txt           # Pinned deps for funTDA.ipynb (giotto-tda/numpy), kept separate — see requirements.txt
 └── README.md
 ```
+
+There is deliberately no `requirements.txt` at the repo root: Part A and Part B need
+mutually incompatible numpy versions (`numpy<2.0` for Part A vs. `numpy>=1.24` for
+Part B — see the explanation under Part A below), so a single shared file would
+promise a common environment that can't actually exist. Install each part's
+`requirements.txt` separately, ideally in its own virtual environment.
 
 ---
 
@@ -59,9 +65,14 @@ Renders both the PDF and HTML. Requires [Quarto](https://quarto.org), a LaTeX di
 
 **Dependencies (Part A):**
 ```
-pip install -r requirements-partA.txt
+pip install -r funTDA/requirements.txt
 ```
-Kept separate from `requirements.txt` because giotto-tda is sensitive to the installed numpy version.
+Kept separate from `time-series/requirements.txt` because of a transitive pin, not
+giotto-tda itself: giotto-tda 0.6.2 depends on `numpy>=1.19.1` with no upper bound,
+but it also pins `scikit-learn==1.3.2` exactly, and that exact scikit-learn version
+requires `numpy<2.0,>=1.17.3`. That's what forces `numpy<2.0` here, and it will
+conflict with any other scikit-learn version another environment might need —
+install this in its own environment.
 R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`, `igraph` (the last one only for the network-comparison figure in `results_partA.qmd`)
 
 ---
@@ -86,7 +97,7 @@ R packages: `TDA`, `fda`, `ggplot2`, `ggrepel`, `patchwork`, `igraph` (the last 
 
 **Dependencies (Part B):**
 ```
-pip install -r requirements.txt
+pip install -r time-series/requirements.txt
 ```
 R packages for `results_partB.qmd`: `fda`, `ggplot2`, `patchwork`, `knitr`. Render with `quarto render time-series/results_partB.qmd` (requires [Quarto](https://quarto.org) and `xelatex` for the PDF); delete `time-series/output/results_partB_permtest_cache.rds` to force the permutation tests to recompute (the control-analysis step alone runs 400 permutation tests of 10,000 permutations each, so expect several minutes on a cold cache).
 

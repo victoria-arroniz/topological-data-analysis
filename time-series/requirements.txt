@@ -1,5 +1,5 @@
-# Python dependencies for the time-series TDA notebook
-# Install with: pip install -r requirements.txt
+# Python dependencies for Part B (time-series/beetles_landscapes.ipynb).
+# Install with: pip install -r time-series/requirements.txt
 
 numpy>=1.24
 matplotlib>=3.7
@@ -8,5 +8,5 @@ jupyter>=1.0      # Jupyter notebook environment
 
 # For funTDA/analysis/funTDA.ipynb (Part A) — install separately, in its own
 # environment if possible: giotto-tda pins an upper bound on numpy that can
-# conflict with the numpy>=1.24 above. See requirements-partA.txt.
-# pip install -r requirements-partA.txt
+# conflict with the numpy>=1.24 above. See funTDA/requirements.txt.
+# pip install -r funTDA/requirements.txt

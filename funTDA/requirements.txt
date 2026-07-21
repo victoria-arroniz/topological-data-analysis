@@ -1,8 +1,8 @@
 # Python dependencies for funTDA/analysis/funTDA.ipynb (Part A) only.
-# Kept separate from requirements.txt because giotto-tda is sensitive to the
-# installed numpy version; install in its own environment if the numpy
-# version this pins conflicts with requirements.txt's numpy>=1.24.
-# Install with: pip install -r requirements-partA.txt
+# Kept separate from time-series/requirements.txt: not because giotto-tda
+# itself needs numpy<2 (it only requires numpy>=1.19.1), but because it pins
+# scikit-learn==1.3.2 exactly, which requires numpy<2.0,>=1.17.3 transitively.
+# Install with: pip install -r funTDA/requirements.txt
 #
 # NOTE: the exact upper bounds below are a conservative estimate, not
 # verified against a live package index in this environment (no network
