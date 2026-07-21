@@ -6,8 +6,11 @@ import numpy as np
 import os
 import glob
 import networkx as nx
+from pathlib import Path
 
-os.makedirs('figures', exist_ok=True)
+ROOT = Path(__file__).resolve().parent
+FIGURES_DIR = ROOT / 'figures'
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -27,9 +30,9 @@ def load_h1(path):
 
 # ─── Figure 1: grn_17_subjects.png ────────────────────────────────────────────
 
-ph_dir = 'funTDA/output/PH'
-asymp_files = sorted(glob.glob(f'{ph_dir}/Asymp*_PH.csv'))
-symp_files  = sorted(glob.glob(f'{ph_dir}/Symp*_PH.csv'))
+ph_dir = ROOT / 'funTDA' / 'output' / 'PH'
+asymp_files = sorted(glob.glob(str(ph_dir / 'Asymp*_PH.csv')))
+symp_files  = sorted(glob.glob(str(ph_dir / 'Symp*_PH.csv')))
 
 asymp_h1 = [load_h1(f) for f in asymp_files]
 symp_h1  = [load_h1(f) for f in symp_files]
@@ -58,13 +61,13 @@ axes[1].grid(True, alpha=0.3)
 
 fig.suptitle('H1 persistence landscapes of 17 H3N2 gene regulatory networks', fontsize=13)
 plt.tight_layout()
-plt.savefig('figures/grn_17_subjects.png', dpi=200, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'grn_17_subjects.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/grn_17_subjects.png saved')
 
 # ─── Figure 2: network_to_landscape.png ───────────────────────────────────────
 
-adj  = np.loadtxt('funTDA/data/GRN_adjacency_matrices/Symptomaticadjmatrix1.csv', delimiter=',')
+adj  = np.loadtxt(ROOT / 'funTDA' / 'data' / 'GRN_adjacency_matrices' / 'Symptomaticadjmatrix1.csv', delimiter=',')
 rng  = np.random.default_rng(0)
 nodes = rng.choice(adj.shape[0], size=60, replace=False)
 sub  = adj[np.ix_(nodes, nodes)]
@@ -83,7 +86,7 @@ pos = nx.circular_layout(G)
 ew  = np.array([G[u][v]['weight'] for u, v in G.edges()])
 ew_norm = (ew - ew.min()) / (ew.max() - ew.min() + 1e-9)
 
-h1_s1   = load_h1('funTDA/output/PH/Symptomaticadjmatrix1_PH.csv')
+h1_s1   = load_h1(ROOT / 'funTDA' / 'output' / 'PH' / 'Symptomaticadjmatrix1_PH.csv')
 t_max_s = h1_s1[:, 1].max() * 1.05 if len(h1_s1) else 1.0
 tseq_s  = np.linspace(0, t_max_s, 500)
 ls_s1   = landscape_k1(h1_s1, tseq_s)
@@ -104,7 +107,7 @@ axes[1].set_title('H1 persistence landscape\n(Symptomatic 1)', fontsize=10)
 axes[1].grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('figures/network_to_landscape.png', dpi=200, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'network_to_landscape.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/network_to_landscape.png saved')
 
@@ -124,9 +127,9 @@ def simulate_beetles(u_a, n=200, B=7.48, c_ea=0.009, c_pa=0.004, c_el=0.012, u_l
 stable_ts    = simulate_beetles(0.73)
 aperiodic_ts = simulate_beetles(0.96)
 
-stable_ls_all    = np.load('time-series/stable_landscapes.npy')
-aperiodic_ls_all = np.load('time-series/aperiodic_landscapes.npy')
-tseq_ts          = np.load('time-series/tseq.npy')
+stable_ls_all    = np.load(ROOT / 'time-series' / 'stable_landscapes.npy')
+aperiodic_ls_all = np.load(ROOT / 'time-series' / 'aperiodic_landscapes.npy')
+tseq_ts          = np.load(ROOT / 'time-series' / 'tseq.npy')
 
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 
@@ -173,7 +176,7 @@ axes[1, 1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:40].max():.2f}',
                 fontsize=9, color='#C85A12')
 
 plt.tight_layout()
-plt.savefig('figures/timeseries_to_landscape.png', dpi=200, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'timeseries_to_landscape.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/timeseries_to_landscape.png saved')
 
@@ -212,7 +215,7 @@ fig.suptitle('H1 persistence landscapes — note the ~7x difference in vertical 
              fontsize=12)
 
 plt.tight_layout()
-plt.savefig('figures/landscapes_individual_dark.png', dpi=200, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'landscapes_individual_dark.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/landscapes_individual_dark.png saved')
 
@@ -232,6 +235,6 @@ ax.set_ylabel('λ₁(t)')
 ax.set_title('H1 persistence landscapes — Stable vs Aperiodic (same axis)')
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig('figures/landscapes_overlaid.png', dpi=200, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'landscapes_overlaid.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/landscapes_overlaid.png saved')
