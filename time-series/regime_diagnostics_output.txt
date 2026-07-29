@@ -1,0 +1,31 @@
+====================================================================
+(1) LYAPUNOV SPECTRUM  -- is the aperiodic regime chaotic?
+====================================================================
+  mu_a = 0.73  [stable   ]  spectrum = [-0.255767, -0.255780, -0.797016]
+      -> FIXED POINT / PERIODIC (all exponents < 0)
+
+  mu_a = 0.96  [aperiodic]  spectrum = [-0.000002, -0.016674, -0.973345]
+      -> QUASI-PERIODIC (largest exponent = 0): invariant closed curve
+
+====================================================================
+(2)/(3) GRID RESOLUTION AND THE EFFECT OF A BURN-IN
+====================================================================
+  If 'EMPTY H1 diagram' is 0 but 'landscape zero ON GRID' is large,
+  the vanishing landscapes are a resolution artefact, not absent loops.
+
+  --- NO burn-in (as committed) ---
+    grid: 500 points on [0.0000, 0.7655], spacing = 0.00153
+    stable, EMPTY H1 diagram        :   0/200
+    stable, landscape zero ON GRID  : 126/200 (63%)
+    stable, median max H1 lifetime  : 0.00022 (vs grid spacing 0.00153)
+    aperiodic, landscape zero       :   0/200
+    mean landscape peak  stable = 0.00202   aperiodic = 0.22820
+
+  --- burn-in = 200 (series length unchanged) ---
+    grid: 500 points on [0.0109, 0.7703], spacing = 0.00152
+    stable, EMPTY H1 diagram        : 200/200
+    stable, landscape zero ON GRID  : 200/200 (100%)
+    stable, median max H1 lifetime  : 0.00000 (vs grid spacing 0.00152)
+    aperiodic, landscape zero       :   0/200
+    mean landscape peak  stable = 0.00000   aperiodic = 0.35073
+
