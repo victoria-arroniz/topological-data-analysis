@@ -49,7 +49,7 @@ ref <- list(
   mean_max_stable = 0.0, mean_max_aperiodic = 0.349,
   pc1_pct = 99, pc2_pct = 1,
   n_aperiodic_pc1_neg = 9,
-  test1_Tobs = 198.6, test1_crit95 = 2.53,
+  test1_Tobs = 198.65, test1_crit95 = 2.58,
   # Every within-stable split is degenerate once the transient is discarded:
   # all 200 stable landscapes are identically zero, so no grid point has
   # positive pooled variance and the statistic is undefined by construction.
@@ -68,6 +68,11 @@ ref_noburnin <- list(
 
 col_stable    <- "blue"
 col_aperiodic <- "orange"
+
+# The memoria lives outside this repository, so a standalone clone must
+# still render cleanly: figures are exported to it only when the target
+# directory is actually present (checked at each ggsave() call site).
+fig_dir <- "../../TFM_UCD/figures"
 ```
 
 ## Data
@@ -275,7 +280,7 @@ knitr::kable(
 
 ```{r fpca-plot}
 #| fig-cap: "PC1 vs PC2 scores (FPCA over H1 landscapes), colored by regime. All 400 points are individual series; no per-point labels, unlike Part A's 17-subject plot, since labeling 400 points would be unreadable — see the full score table below for per-series values."
-ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
+fpca_score_plot <- ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   geom_point(size = 2, alpha = 0.6) +
@@ -287,6 +292,14 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
     legend.title = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
+fpca_score_plot
+# Exported for the memoria (TFM_UCD/figures/ts_fpca_scores.pdf): with the
+# burn-in, all 200 stable series share the same identically-zero landscape,
+# so their scores collapse onto a single point in the PC1 < 0 half-plane.
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "ts_fpca_scores.pdf"), fpca_score_plot,
+         width = 7, height = 5)
+}
 ```
 
 ::: {.callout-note collapse="true"}
@@ -670,6 +683,15 @@ histAperiodic <- ggplot(data.frame(p = pvalsAperiodic), aes(x = p)) +
   theme_classic(base_size = 13)
 
 histStable + histAperiodic
+
+# Exported for the memoria (TFM_UCD/figures/ts_splithalf_hist.pdf): only the
+# aperiodic panel, since the stable control is degenerate (every split
+# compares identically-zero curves, so its p-value is undefined, not a
+# distribution) and has nothing to plot.
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "ts_splithalf_hist.pdf"), histAperiodic,
+         width = 7, height = 4.5)
+}
 ```
 
 ::: {.callout-note collapse="true"}

@@ -28,6 +28,12 @@ def load_h1(path):
     h1 = data[(data[:, 2] == 1) & (data[:, 1] < np.inf)]
     return h1[:, :2]
 
+def zero_safe_ylim(peak, fallback=0.05):
+    """(0, peak*1.10), or a small fixed fallback range when peak is exactly
+    0 -- after the Part B burn-in fix, every stable landscape is identically
+    zero, so set_ylim(0, 0) would otherwise collapse the axis to nothing."""
+    return (0, peak * 1.10) if peak > 0 else (0, fallback)
+
 # ─── Figure 1: grn_17_subjects.png ────────────────────────────────────────────
 
 ph_dir = ROOT / 'funTDA' / 'output' / 'PH'
@@ -127,9 +133,13 @@ def simulate_beetles(u_a, n=200, B=7.48, c_ea=0.009, c_pa=0.004, c_el=0.012, u_l
 stable_ts    = simulate_beetles(0.73)
 aperiodic_ts = simulate_beetles(0.96)
 
-stable_ls_all    = np.load(ROOT / 'time-series' / 'stable_landscapes.npy')
-aperiodic_ls_all = np.load(ROOT / 'time-series' / 'aperiodic_landscapes.npy')
-tseq_ts          = np.load(ROOT / 'time-series' / 'tseq.npy')
+# Read from the committed output/ CSVs (the burn-in run, same source
+# results_partB.qmd treats as the single source of truth) rather than the
+# .npy arrays directly, so this script can't silently drift from the report.
+ts_output_dir    = ROOT / 'time-series' / 'output'
+stable_ls_all    = np.loadtxt(ts_output_dir / 'stable_landscapes.csv', delimiter=',')
+aperiodic_ls_all = np.loadtxt(ts_output_dir / 'aperiodic_landscapes.csv', delimiter=',')
+tseq_ts          = np.loadtxt(ts_output_dir / 'tseq.csv', delimiter=',')
 
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 
@@ -146,21 +156,24 @@ axes[1, 0].set_xlabel('Time step')
 axes[1, 0].set_ylabel('Adult population (A)')
 axes[1, 0].grid(True, alpha=0.3)
 
-# Landscapes are plotted on INDEPENDENT y-scales: the stable landscapes are
-# ~7x smaller (max peak among this panel's 40-series subset, not the same
-# quantity as the ~150-fold figure in results_partB.qmd, which is the mean
-# peak across all 200 series per regime — subset-max vs. full-sample-mean
-# behave very differently here because many stable landscapes are exactly
-# zero), so a shared axis would flatten them to zero. Own scale + thicker
-# lines makes the stable structure visible.
+# Landscapes are plotted on INDEPENDENT y-scales. After the Part B burn-in
+# fix, every stable series has converged to the fixed point before the
+# retained window starts, so its Takens embedding is a single repeated
+# point with no H1 loop: all 200 stable landscapes (not just this panel's
+# 40-series subset) are identically zero. A shared axis would put the
+# stable panel's own y-range at (0, 0), so it gets a small fixed fallback
+# range instead (zero_safe_ylim), with a text label stating this directly
+# rather than reporting a peak of 0.00.
 for i in range(40):
     axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.55, linewidth=1.1)
-axes[0, 1].set_title('H1 landscapes — Stable  (note small scale)')
+axes[0, 1].set_title('H1 landscapes — Stable  (identically zero)')
 axes[0, 1].set_xlabel('Filtration value')
 axes[0, 1].set_ylabel('λ₁(t)')
-axes[0, 1].set_ylim(0, stable_ls_all[:40].max() * 1.10)
+stable_peak_40 = stable_ls_all[:40].max()
+axes[0, 1].set_ylim(*zero_safe_ylim(stable_peak_40))
 axes[0, 1].grid(True, alpha=0.3)
-axes[0, 1].text(0.97, 0.92, f'peak ≈ {stable_ls_all[:40].max():.2f}',
+stable_label_40 = 'identically zero' if stable_peak_40 == 0 else f'peak ≈ {stable_peak_40:.2f}'
+axes[0, 1].text(0.97, 0.92, stable_label_40,
                 transform=axes[0, 1].transAxes, ha='right', va='top',
                 fontsize=9, color='#16336E')
 
@@ -182,12 +195,14 @@ print('figures/timeseries_to_landscape.png saved')
 
 # ─── Figure 4: landscapes_individual_dark.png ─────────────────────────────────
 
-# Two panels with INDEPENDENT y-scales. On a shared axis the stable
-# landscapes (~7x smaller — max peak among this panel's 50-series subset;
-# see the note above the previous figure re: this vs. the ~150-fold
-# full-sample mean-peak figure in results_partB.qmd) collapse onto zero and
-# are indistinguishable; giving each regime its own scale reveals the
-# stable structure.
+# Two panels with INDEPENDENT y-scales. After the Part B burn-in fix, every
+# stable series (all 200, not just this panel's 50-series subset) has
+# converged to the fixed point before the retained window starts, so its
+# landscape is identically zero -- there is no "smaller" scale to share, a
+# shared axis would just show a flat line at 0. The stable panel gets a
+# small fixed fallback range (zero_safe_ylim) so it doesn't collapse to
+# nothing, and a text label stating the landscape is zero rather than a
+# peak value.
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
@@ -195,9 +210,11 @@ for i in range(50):
 axes[0].set_title('Stable (regular)', color='#16336E', fontsize=13, fontweight='bold')
 axes[0].set_xlabel('Filtration value')
 axes[0].set_ylabel('λ₁(t)')
-axes[0].set_ylim(0, stable_ls_all[:50].max() * 1.10)
+stable_peak_50 = stable_ls_all[:50].max()
+axes[0].set_ylim(*zero_safe_ylim(stable_peak_50))
 axes[0].grid(True, alpha=0.3)
-axes[0].text(0.97, 0.92, f'peak ≈ {stable_ls_all[:50].max():.2f}',
+stable_label_50 = 'identically zero' if stable_peak_50 == 0 else f'peak ≈ {stable_peak_50:.2f}'
+axes[0].text(0.97, 0.92, stable_label_50,
              transform=axes[0].transAxes, ha='right', va='top', fontsize=10, color='#16336E')
 
 for i in range(50):
@@ -210,8 +227,8 @@ axes[1].grid(True, alpha=0.3)
 axes[1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:50].max():.2f}',
              transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color='#C85A12')
 
-fig.suptitle('H1 persistence landscapes — note the ~7x difference in vertical scale\n'
-             '(subset-max peak ratio; see results_partB.qmd for the ~150-fold full-sample mean-peak figure)',
+fig.suptitle('H1 persistence landscapes — the stable regime is identically zero\n'
+             '(after the burn-in, its attractor is a fixed point with no H1 loop; see results_partB.qmd)',
              fontsize=12)
 
 plt.tight_layout()

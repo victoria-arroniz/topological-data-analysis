@@ -22,6 +22,16 @@ venv/
 *_files/
 *_cache/
 
+# Leftover intermediate files from a PDF (xelatex) render that gets
+# interrupted or run with a keep-tex-style option — none of these are ever
+# a committed source in this repo, just build byproducts of results_partA.qmd
+# / results_partB.qmd.
+*.aux
+*.log
+*.toc
+*.pdf.md
+*.tex
+
 # Presentation figures: derived artifacts regenerable with `python make_figs.py`.
 # Not versioned so they can't go stale against the code that generates them —
 # this already happened once (figures committed in e3683cc, then make_figs.py
