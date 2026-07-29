@@ -50,3 +50,6 @@ figures/
 # Anyone reproducing the images branch must request the data from the provider
 # under their own agreement. Document the accession/query in the thesis instead.
 data/
+
+# Local reading copies of cited literature; not distributed with this repo.
+references/

@@ -29,11 +29,6 @@ topological-data-analysis/
 │   ├── requirements.txt             # Pinned deps for beetles_landscapes.ipynb
 │   └── results_partB.qmd            # R/knitr: FPCA + permutation test (reads output/*.csv)
 │
-├── references/
-│   ├── ***REMOVED***                                        # funTDA paper
-│   ├── ***REMOVED***
-│   └── ***REMOVED***                                           # Pereira & de Mello (2015)
-│
 └── README.md
 ```
 
