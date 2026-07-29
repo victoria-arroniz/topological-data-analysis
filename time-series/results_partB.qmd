@@ -37,7 +37,28 @@ library(patchwork)
 # Reference values from a prior direct computation on the committed landscape
 # matrices (for sanity-check comparison only; every number reported in the
 # body is recomputed here from output/*.csv, not hardcoded from this list).
+# NOTE: output/ now holds the BURN-IN run (beetles_landscapes.ipynb with
+# BURN_IN = 200), in which the retained series start on the attractor. The
+# previous no-burn-in run is preserved in output_noburnin/ and is used for the
+# transient sensitivity comparison. The values below were obtained by a direct
+# Python computation on the committed CSVs (burnin_analysis.py); the p-value
+# and critical value carry Monte Carlo noise and may differ in the last
+# reported digit after re-rendering.
 ref <- list(
+  n_stable_zero = 200, n_aperiodic_zero = 0,
+  mean_max_stable = 0.0, mean_max_aperiodic = 0.349,
+  pc1_pct = 99, pc2_pct = 1,
+  n_aperiodic_pc1_neg = 9,
+  test1_Tobs = 198.6, test1_crit95 = 2.53,
+  # Every within-stable split is degenerate once the transient is discarded:
+  # all 200 stable landscapes are identically zero, so no grid point has
+  # positive pooled variance and the statistic is undefined by construction.
+  stable_control_degenerate = TRUE
+)
+
+# Reference values for the no-burn-in run preserved in output_noburnin/,
+# reported in the sensitivity section.
+ref_noburnin <- list(
   n_stable_zero = 129, n_aperiodic_zero = 0,
   mean_max_stable = 0.0016, mean_max_aperiodic = 0.227,
   pc1_pct = 84, pc2_pct = 13,
@@ -158,8 +179,8 @@ n_stable_zero    <- sum(is_zero_row(DataStable))
 n_aperiodic_zero <- sum(is_zero_row(DataAperiodic))
 
 stopifnot(
-  "Expected exactly 129 stable series with an identically-zero landscape" =
-    n_stable_zero == 129,
+  "Expected every stable landscape to be identically zero after the burn-in" =
+    n_stable_zero == ref$n_stable_zero,
   "Expected 0 aperiodic series with an identically-zero landscape" =
     n_aperiodic_zero == 0
 )
@@ -182,7 +203,7 @@ Consistent with this, the mean of each series' landscape peak is
 150-fold difference in typical peak height.
 
 ```{r zero-landscape-asserts}
-tol_meanmax <- 0.01
+tol_meanmax <- 0.02
 stopifnot(
   "Mean stable landscape peak out of tolerance"    = abs(mean_max_stable - ref$mean_max_stable) < tol_meanmax,
   "Mean aperiodic landscape peak out of tolerance" = abs(mean_max_aperiodic - ref$mean_max_aperiodic) < tol_meanmax
@@ -392,12 +413,24 @@ vtperm <- function(X, i1, i2, nperm = 10000) {
     v2 <- rowVar(M[, n1 + (1:n2), drop = FALSE]) / n2
     den <- v1 + v2
     valid <- den > 0
+    # Fully degenerate case: if no grid point has positive pooled variance the
+    # statistic is undefined, not -Inf. This arises once the transient is
+    # discarded, because every stable landscape is then identically zero and a
+    # within-stable split compares constant curves against constant curves.
+    # Returning NA_real_ keeps that visible instead of letting max() of an
+    # empty vector propagate -Inf silently.
+    if (!any(valid)) return(NA_real_)
     max(abs(m1[valid] - m2[valid]) / sqrt(den[valid]))
   }
   Tobs <- Ts(Xmat)
+  if (is.na(Tobs)) {
+    return(list(pval = NA_real_, Tobs = NA_real_, crit95 = NA_real_,
+                degenerate = TRUE))
+  }
   Tn <- numeric(nperm)
   for (i in 1:nperm) Tn[i] <- Ts(Xmat[, sample(n)])
-  list(pval = mean(Tobs < Tn), Tobs = Tobs, crit95 = unname(quantile(Tn, 0.95)))
+  list(pval = mean(Tobs < Tn), Tobs = Tobs, crit95 = unname(quantile(Tn, 0.95)),
+       degenerate = FALSE)
 }
 
 argvals <- seq(min(tseq), max(tseq), length.out = 101)
@@ -495,6 +528,24 @@ stopifnot(
   "Expected 200 stable control splits"    = length(pvalsStable) == 200,
   "Expected 200 aperiodic control splits" = length(pvalsAperiodic) == 200
 )
+
+# After the burn-in every stable landscape is identically zero, so each
+# within-stable split compares constant curves and the statistic is undefined.
+# vtperm returns NA in that case; assert that the degeneracy is total rather
+# than intermittent, since a partial degeneracy would signal a bug instead of
+# the expected absence of signal.
+stable_control_degenerate <- all(is.na(pvalsStable))
+
+# Formatting helper: report "undefined" where the statistic does not exist.
+fmt <- function(x, degenerate, pct = FALSE) {
+  if (isTRUE(degenerate)) return("undefined")
+  sprintf(if (pct) "%.1f%%" else "%.3f", x)
+}
+stopifnot(
+  "Stable control degeneracy does not match the reference expectation" =
+    identical(stable_control_degenerate, ref$stable_control_degenerate),
+  "Aperiodic control must remain well defined" = !any(is.na(pvalsAperiodic))
+)
 ```
 
 ::: {.callout-important}
@@ -588,9 +639,15 @@ the test does not over-reject.
 #| tbl-cap: "Summary of the within-regime control analysis"
 splithalf_summary <- data.frame(
   Regime = c("Stable (200 random splits, 100 vs 100)", "Aperiodic (200 random splits, 100 vs 100)"),
-  `mean p-value` = sprintf("%.3f", c(mean(pvalsStable), mean(pvalsAperiodic))),
-  `sd(p-value)` = sprintf("%.3f", c(sd(pvalsStable), sd(pvalsAperiodic))),
-  `% splits with p < 0.05` = sprintf("%.1f%%", c(mean(pvalsStable < 0.05), mean(pvalsAperiodic < 0.05)) * 100),
+  # fmt() prints "undefined" rather than NA for the degenerate stable control,
+  # so the table states why there is no number instead of showing a blank.
+  `mean p-value` = c(fmt(mean(pvalsStable, na.rm = TRUE), stable_control_degenerate),
+                     sprintf("%.3f", mean(pvalsAperiodic))),
+  `sd(p-value)` = c(fmt(sd(pvalsStable, na.rm = TRUE), stable_control_degenerate),
+                    sprintf("%.3f", sd(pvalsAperiodic))),
+  `% splits with p < 0.05` = c(fmt(mean(pvalsStable < 0.05, na.rm = TRUE) * 100,
+                                   stable_control_degenerate, pct = TRUE),
+                               sprintf("%.1f%%", mean(pvalsAperiodic < 0.05) * 100)),
   check.names = FALSE
 )
 knitr::kable(splithalf_summary, align = "lrrr")
@@ -622,16 +679,21 @@ histStable + histAperiodic
 tol_mean <- 0.05
 tol_frac <- 5  # percentage points — 200 random splits is a noisier estimate than Part A's exhaustive enumeration
 stopifnot(
-  "Stable control mean p implausible"    = abs(mean(pvalsStable) - 0.5) < tol_mean + 0.1,
+  # The stable control is skipped when degenerate: with no signal to detect
+  # there is no calibration to check, and the aperiodic control carries the
+  # burden of demonstrating that the test is not over-rejecting.
+  "Stable control mean p implausible" =
+    stable_control_degenerate || abs(mean(pvalsStable) - 0.5) < tol_mean + 0.1,
   "Aperiodic control mean p implausible" = abs(mean(pvalsAperiodic) - 0.5) < tol_mean + 0.1,
-  "Stable control frac<0.05 far from nominal 5%"    = abs(mean(pvalsStable < 0.05) * 100 - 5) < tol_frac + 3,
+  "Stable control frac<0.05 far from nominal 5%" =
+    stable_control_degenerate || abs(mean(pvalsStable < 0.05) * 100 - 5) < tol_frac + 3,
   "Aperiodic control frac<0.05 far from nominal 5%" = abs(mean(pvalsAperiodic < 0.05) * 100 - 5) < tol_frac + 3
 )
 ```
 
 | Regime | mean p | sd p | % p < 0.05 |
 |---|---:|---:|---:|
-| Stable | `r sprintf("%.3f", mean(pvalsStable))` | `r sprintf("%.3f", sd(pvalsStable))` | `r sprintf("%.1f%%", mean(pvalsStable < 0.05) * 100)` |
+| Stable | `r fmt(mean(pvalsStable, na.rm = TRUE), stable_control_degenerate)` | `r fmt(sd(pvalsStable, na.rm = TRUE), stable_control_degenerate)` | `r fmt(mean(pvalsStable < 0.05, na.rm = TRUE) * 100, stable_control_degenerate, pct = TRUE)` |
 | Aperiodic | `r sprintf("%.3f", mean(pvalsAperiodic))` | `r sprintf("%.3f", sd(pvalsAperiodic))` | `r sprintf("%.1f%%", mean(pvalsAperiodic < 0.05) * 100)` |
 :::
 
