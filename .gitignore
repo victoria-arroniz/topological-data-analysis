@@ -37,3 +37,16 @@ venv/
 # this already happened once (figures committed in e3683cc, then make_figs.py
 # changed in 6b245ce without the committed PNGs being regenerated to match).
 figures/
+
+# Imaging data for the images branch (Chapter 5): DICOM series plus the
+# accompanying manifest. NEVER commit this.
+#
+#   * It is human subject data — 19 participants with sex, age and clinical
+#     group (Control / PD) in data.csv — and this repository is public.
+#   * It is redistributed under a Data Use Agreement that does not permit
+#     republication; the DUA is with the data provider, not with this project.
+#   * It is ~163 MB across ~3,650 files, far past what git should carry.
+#
+# Anyone reproducing the images branch must request the data from the provider
+# under their own agreement. Document the accession/query in the thesis instead.
+data/
