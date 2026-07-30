@@ -194,6 +194,32 @@ plt.savefig(FIGURES_DIR / 'timeseries_to_landscape.png', dpi=200, bbox_inches='t
 plt.close()
 print('figures/timeseries_to_landscape.png saved')
 
+# ─── Figure 3b: timeseries_regimes.png (raw series only, for the memoria's Data
+#     section; the landscape half of the old 2x2 is already covered there by
+#     landscapes_overlaid.png in Results) ──────────────────────────────────────
+# Same example series, same colors and axis labels as the left column of the
+# 2x2 above, so a reader comparing the two recognises the same trajectory.
+# Full y-axis range (no clipping): the stable series' decaying oscillation
+# before it settles is exactly what the text discusses, so it must stay visible.
+fig, axes = plt.subplots(2, 1, figsize=(7, 6))
+
+axes[0].plot(t_ax, stable_ts[:80], color='#1a5fa8', linewidth=1.8)
+axes[0].set_title('Stable regime (u_a = 0.73)')
+axes[0].set_xlabel('Time step')
+axes[0].set_ylabel('Adult population (A)')
+axes[0].grid(True, alpha=0.3)
+
+axes[1].plot(t_ax, aperiodic_ts[:80], color='darkorange', linewidth=1.8)
+axes[1].set_title('Aperiodic regime (u_a = 0.96)')
+axes[1].set_xlabel('Time step')
+axes[1].set_ylabel('Adult population (A)')
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'timeseries_regimes.png', dpi=200, bbox_inches='tight')
+plt.close()
+print('figures/timeseries_regimes.png saved')
+
 # ─── Figure 4: landscapes_individual_dark.png ─────────────────────────────────
 
 # Two panels with INDEPENDENT y-scales: the stable regime's peak is always
@@ -270,7 +296,7 @@ print('figures/landscapes_overlaid.png saved')
 thesis_figs = ROOT.parent / 'ResearchProject_UCD' / 'figures'
 if thesis_figs.is_dir():
     for src_name, dst_name in [
-        ('timeseries_to_landscape.png', 'ts_timeseries_to_landscape.png'),
+        ('timeseries_regimes.png', 'ts_timeseries_regimes.png'),
         ('landscapes_overlaid.png', 'ts_landscapes_overlaid.png'),
     ]:
         shutil.copyfile(FIGURES_DIR / src_name, thesis_figs / dst_name)
