@@ -37,33 +37,36 @@ library(patchwork)
 # Reference values from a prior direct computation on the committed landscape
 # matrices (for sanity-check comparison only; every number reported in the
 # body is recomputed here from output/*.csv, not hardcoded from this list).
-# NOTE: output/ now holds the BURN-IN run (beetles_landscapes.ipynb with
-# BURN_IN = 200), in which the retained series start on the attractor. The
-# previous no-burn-in run is preserved in output_noburnin/ and is used for the
-# transient sensitivity comparison. The values below were obtained by a direct
-# Python computation on the committed CSVs (burnin_analysis.py); the p-value
-# and critical value carry Monte Carlo noise and may differ in the last
-# reported digit after re-rendering.
+# output/ holds the ORIGINAL run (beetles_landscapes.ipynb at its default
+# BURN_IN = 0), faithful to the heritage code in Example1Beetles.Rmd, which
+# never discards the initial transient -- this is the MAIN analysis, both
+# because this chapter is a replica of that code and because the thesis
+# director asked to DISCUSS dropping the transient, not to adopt it as the
+# primary pipeline. output_burnin/ holds the BURN_IN = 200 run, used only as
+# a supporting sensitivity analysis in "The approach-to-equilibrium
+# transient" below. The p-value and critical value carry Monte Carlo noise
+# and may differ in the last reported digit after re-rendering.
 ref <- list(
-  n_stable_zero = 200, n_aperiodic_zero = 0,
-  mean_max_stable = 0.0, mean_max_aperiodic = 0.349,
-  pc1_pct = 99, pc2_pct = 1,
-  n_aperiodic_pc1_neg = 9,
-  test1_Tobs = 198.65, test1_crit95 = 2.58,
-  # Every within-stable split is degenerate once the transient is discarded:
-  # all 200 stable landscapes are identically zero, so no grid point has
-  # positive pooled variance and the statistic is undefined by construction.
-  stable_control_degenerate = TRUE
-)
-
-# Reference values for the no-burn-in run preserved in output_noburnin/,
-# reported in the sensitivity section.
-ref_noburnin <- list(
   n_stable_zero = 129, n_aperiodic_zero = 0,
   mean_max_stable = 0.0016, mean_max_aperiodic = 0.227,
   pc1_pct = 84, pc2_pct = 13,
   n_aperiodic_pc1_neg = 42,
-  test1_Tobs = 85.5, test1_crit95 = 2.85
+  test1_Tobs = 85.5, test1_crit95 = 2.85,
+  # With the transient retained, the stable regime is NOT uniformly zero (71
+  # of 200 landscapes carry genuine H1 signal above the grid's resolution),
+  # so a within-stable split has positive pooled variance almost everywhere
+  # and the control statistic is well defined.
+  stable_control_degenerate = FALSE
+)
+
+# Reference values for the burn-in = 200 run in output_burnin/, reported only
+# in "The approach-to-equilibrium transient" section below as a supporting
+# sensitivity analysis, not the main result.
+ref_burnin <- list(
+  n_stable_zero = 200, mean_max_aperiodic = 0.349,
+  pc1_pct = 99, pc2_pct = 1,
+  n_aperiodic_pc1_neg = 9,
+  test1_Tobs = 198.65, test1_crit95 = 2.58
 )
 
 col_stable    <- "blue"
@@ -184,7 +187,7 @@ n_stable_zero    <- sum(is_zero_row(DataStable))
 n_aperiodic_zero <- sum(is_zero_row(DataAperiodic))
 
 stopifnot(
-  "Expected every stable landscape to be identically zero after the burn-in" =
+  "Expected 129 of 200 stable landscapes identically zero on the grid (a grid-resolution effect, see the transient section below, not an empty H1 diagram)" =
     n_stable_zero == ref$n_stable_zero,
   "Expected 0 aperiodic series with an identically-zero landscape" =
     n_aperiodic_zero == 0
@@ -196,16 +199,23 @@ mean_max_aperiodic <- mean(apply(DataAperiodic, 1, max))
 
 **`r n_stable_zero` of the 200 stable series (`r sprintf("%.0f%%", 100*n_stable_zero/200)`)
 have a landscape that is identically zero** across the whole grid, versus
-**`r n_aperiodic_zero` of 200** aperiodic series. This is the expected
-topological signature of the two regimes, not noise: `u_a = 0.73` drives the
-population to a fixed-point equilibrium, whose Takens-embedded attractor is a
-compact cluster with no loops — no H1 features, hence a landscape that is
-exactly zero everywhere. `u_a = 0.96` drives sustained oscillation, whose
-attractor is a closed orbit — an H1 loop that the landscape detects directly.
-Consistent with this, the mean of each series' landscape peak is
-**`r sprintf("%.4f", mean_max_stable)`** for stable series versus
-**`r sprintf("%.4f", mean_max_aperiodic)`** for aperiodic ones — roughly a
-150-fold difference in typical peak height.
+**`r n_aperiodic_zero` of 200** aperiodic series. `u_a = 0.96` drives sustained
+oscillation, whose attractor is a closed orbit — an H1 loop that the landscape
+detects directly, so `n_aperiodic_zero = 0` reflects a genuinely empty
+diagram's absence. The stable case is more subtle and, on its own, easy to
+over-read: **these `r n_stable_zero` series do not have empty H1 diagrams.**
+Every stable series still carries the decaying spiral of its approach to the
+`u_a = 0.73` fixed point, which is a closed curve in the Takens embedding and
+therefore does register an H1 feature — just one short-lived enough that no
+point of the shared 500-point grid falls inside its birth–death interval, so
+the *sampled* landscape reads as zero even though the feature exists. "The
+approach-to-equilibrium transient" section below derives why this spiral
+exists and quantifies the gap between feature lifetime and grid spacing.
+Consistent with a real but small signal rather than a true absence, the mean
+of each series' landscape peak is **`r sprintf("%.4f", mean_max_stable)`** for
+stable series versus **`r sprintf("%.4f", mean_max_aperiodic)`** for aperiodic
+ones — roughly a 150-fold difference in typical peak height, not a zero-vs-
+nonzero one.
 
 ```{r zero-landscape-asserts}
 tol_meanmax <- 0.02
@@ -427,11 +437,16 @@ vtperm <- function(X, i1, i2, nperm = 10000) {
     den <- v1 + v2
     valid <- den > 0
     # Fully degenerate case: if no grid point has positive pooled variance the
-    # statistic is undefined, not -Inf. This arises once the transient is
-    # discarded, because every stable landscape is then identically zero and a
-    # within-stable split compares constant curves against constant curves.
-    # Returning NA_real_ keeps that visible instead of letting max() of an
-    # empty vector propagate -Inf silently.
+    # statistic is undefined, not -Inf. This does NOT trigger in the main
+    # analysis below: with the transient retained, 71 of the 200 stable
+    # landscapes carry genuine (if grid-sampled-as-zero) H1 signal, and a
+    # within-stable split has positive pooled variance almost everywhere. It
+    # is a correctness safeguard that DOES activate in "The
+    # approach-to-equilibrium transient" section's burn-in appendix, where
+    # discarding the transient makes every stable landscape identically zero
+    # and a within-stable split compares constant curves against constant
+    # curves. Returning NA_real_ keeps that visible instead of letting max()
+    # of an empty vector propagate -Inf silently.
     if (!any(valid)) return(NA_real_)
     max(abs(m1[valid] - m2[valid]) / sqrt(den[valid]))
   }
@@ -445,111 +460,128 @@ vtperm <- function(X, i1, i2, nperm = 10000) {
   list(pval = mean(Tobs < Tn), Tobs = Tobs, crit95 = unname(quantile(Tn, 0.95)),
        degenerate = FALSE)
 }
+```
 
-argvals <- seq(min(tseq), max(tseq), length.out = 101)
+```{r permtest-def}
+count_valid <- function(v1, v2) sum((v1 + v2) > 0)
+
+# Runs the main stable-vs-aperiodic test plus both within-regime control
+# analyses, with an on-disk cache keyed on a hash of its own input CSVs (if
+# the committed CSVs ever change, the stored p-values would otherwise
+# silently go stale and asserts would pass against outdated numbers instead
+# of catching the change; tools::md5sum is base R, no extra dependency).
+# Factored out so the SAME code path runs both the main analysis (output/,
+# below) and the burn-in appendix (output_burnin/, in "The
+# approach-to-equilibrium transient" section) -- the two differ only in
+# which CSVs they read, not in how the statistic is computed.
+run_permtest_suite <- function(DataStable, fdStable, fdAperiodic, tseq,
+                                input_files, cache_file, n_splits = 200) {
+  input_hash  <- paste(unname(tools::md5sum(input_files)), collapse = "_")
+  cached      <- if (file.exists(cache_file)) readRDS(cache_file) else NULL
+  cache_valid <- !is.null(cached) && identical(cached$input_hash, input_hash)
+
+  if (!cache_valid) {
+    set.seed(123)
+    argvals <- seq(min(tseq), max(tseq), length.out = 101)
+
+    # 1) Main test: Stable vs Aperiodic
+    XFull <- cbind(eval.fd(argvals, fdStable), eval.fd(argvals, fdAperiodic))
+    test1 <- vtperm(XFull, 1:200, 201:400, nperm = 10000)
+
+    # Diagnostics for the main test (descriptive only; does not affect test1
+    # or consume any random numbers, so it cannot change which permutations
+    # get drawn below).
+    m1_diag <- rowMeans(XFull[, 1:200]); m2_diag <- rowMeans(XFull[, 201:400])
+    v1_diag <- rowVar(XFull[, 1:200]) / 200; v2_diag <- rowVar(XFull[, 201:400]) / 200
+    den_diag <- v1_diag + v2_diag
+    diff_diag <- abs(m1_diag - m2_diag)
+    stat_diag <- ifelse(den_diag > 0, diff_diag / sqrt(den_diag), NA_real_)
+    i_sup     <- which.max(stat_diag)
+    i_diffmax <- which.max(diff_diag)
+    test1_diag <- list(
+      n_valid = count_valid(v1_diag, v2_diag), n_grid = length(den_diag),
+      t_sup = argvals[i_sup], diff_sup = diff_diag[i_sup], stat_sup = stat_diag[i_sup],
+      t_diffmax = argvals[i_diffmax], diff_diffmax = diff_diag[i_diffmax], stat_diffmax = stat_diag[i_diffmax]
+    )
+
+    # 2) Control analysis, stable regime: exhaustive enumeration of all 4-vs-4-
+    #    style splits (as in Part A) is infeasible here (choose(200,100) is
+    #    astronomically large), so instead draw a random sample of 200 balanced
+    #    (100 vs 100) splits. Alongside each split's p-value, also record (a)
+    #    how many of the 101 grid points survive the zero-variance mask and
+    #    (b) what fraction of each half's 100 series is identically zero —
+    #    neither consumes random numbers, so neither changes pvalsStable.
+    XStable  <- eval.fd(argvals, fdStable)
+    pvalsStable     <- numeric(n_splits)
+    validStable     <- integer(n_splits)
+    fracZeroStable  <- numeric(n_splits)
+    for (i in seq_len(n_splits)) {
+      g1 <- sample(1:200, 100); g2 <- setdiff(1:200, g1)
+      pvalsStable[i] <- vtperm(XStable, g1, g2, nperm = 10000)$pval
+      vv1 <- rowVar(XStable[, g1]) / 100; vv2 <- rowVar(XStable[, g2]) / 100
+      validStable[i] <- count_valid(vv1, vv2)
+      fracZeroStable[i] <- mean(c(sum(is_zero_row(DataStable[g1, , drop = FALSE])),
+                                   sum(is_zero_row(DataStable[g2, , drop = FALSE])))) / 100
+    }
+
+    # 3) Control analysis, aperiodic regime: same random-sample approach and
+    #    the same grid-validity diagnostic (no aperiodic series is identically
+    #    zero, so there is no zero-fraction to report here).
+    XAperiodic <- eval.fd(argvals, fdAperiodic)
+    pvalsAperiodic <- numeric(n_splits)
+    validAperiodic <- integer(n_splits)
+    for (i in seq_len(n_splits)) {
+      g1 <- sample(1:200, 100); g2 <- setdiff(1:200, g1)
+      pvalsAperiodic[i] <- vtperm(XAperiodic, g1, g2, nperm = 10000)$pval
+      vv1 <- rowVar(XAperiodic[, g1]) / 100; vv2 <- rowVar(XAperiodic[, g2]) / 100
+      validAperiodic[i] <- count_valid(vv1, vv2)
+    }
+
+    cached <- list(
+      input_hash = input_hash, test1 = test1, test1_diag = test1_diag,
+      pvalsStable = pvalsStable, pvalsAperiodic = pvalsAperiodic,
+      validStable = validStable, validAperiodic = validAperiodic,
+      fracZeroStable = fracZeroStable
+    )
+    saveRDS(cached, cache_file)
+  }
+
+  cached
+}
 ```
 
 ```{r permtest-main}
-# The cache is keyed on a hash of its own inputs: if the committed CSVs ever
-# change, the stored p-values would otherwise silently go stale and the
-# asserts below would pass against outdated numbers instead of catching the
-# change. tools::md5sum is base R, no extra dependency.
-input_files <- c("output/tseq.csv", "output/stable_landscapes.csv", "output/aperiodic_landscapes.csv")
-input_hash  <- paste(unname(tools::md5sum(input_files)), collapse = "_")
+res_main <- run_permtest_suite(
+  DataStable, fdStable, fdAperiodic, tseq,
+  input_files = c("output/tseq.csv", "output/stable_landscapes.csv", "output/aperiodic_landscapes.csv"),
+  cache_file  = "output/results_partB_permtest_cache.rds"
+)
 
-cache_file  <- "output/results_partB_permtest_cache.rds"
-cached      <- if (file.exists(cache_file)) readRDS(cache_file) else NULL
-cache_valid <- !is.null(cached) && identical(cached$input_hash, input_hash)
-
-count_valid <- function(v1, v2) sum((v1 + v2) > 0)
-
-if (!cache_valid) {
-  set.seed(123)
-
-  # 1) Main test: Stable vs Aperiodic
-  XFull <- cbind(eval.fd(argvals, fdStable), eval.fd(argvals, fdAperiodic))
-  test1 <- vtperm(XFull, 1:200, 201:400, nperm = 10000)
-
-  # Diagnostics for the main test (descriptive only; does not affect test1
-  # or consume any random numbers, so it cannot change which permutations
-  # get drawn below).
-  m1_diag <- rowMeans(XFull[, 1:200]); m2_diag <- rowMeans(XFull[, 201:400])
-  v1_diag <- rowVar(XFull[, 1:200]) / 200; v2_diag <- rowVar(XFull[, 201:400]) / 200
-  den_diag <- v1_diag + v2_diag
-  diff_diag <- abs(m1_diag - m2_diag)
-  stat_diag <- ifelse(den_diag > 0, diff_diag / sqrt(den_diag), NA_real_)
-  i_sup     <- which.max(stat_diag)
-  i_diffmax <- which.max(diff_diag)
-  test1_diag <- list(
-    n_valid = count_valid(v1_diag, v2_diag), n_grid = length(den_diag),
-    t_sup = argvals[i_sup], diff_sup = diff_diag[i_sup], stat_sup = stat_diag[i_sup],
-    t_diffmax = argvals[i_diffmax], diff_diffmax = diff_diag[i_diffmax], stat_diffmax = stat_diag[i_diffmax]
-  )
-
-  # 2) Control analysis, stable regime: exhaustive enumeration of all 4-vs-4-
-  #    style splits (as in Part A) is infeasible here (choose(200,100) is
-  #    astronomically large), so instead draw a random sample of 200 balanced
-  #    (100 vs 100) splits. Alongside each split's p-value, also record (a)
-  #    how many of the 101 grid points survive the zero-variance mask and
-  #    (b) what fraction of each half's 100 series is identically zero —
-  #    neither consumes random numbers, so neither changes pvalsStable.
-  XStable  <- eval.fd(argvals, fdStable)
-  n_splits <- 200
-  pvalsStable     <- numeric(n_splits)
-  validStable     <- integer(n_splits)
-  fracZeroStable  <- numeric(n_splits)
-  for (i in seq_len(n_splits)) {
-    g1 <- sample(1:200, 100); g2 <- setdiff(1:200, g1)
-    pvalsStable[i] <- vtperm(XStable, g1, g2, nperm = 10000)$pval
-    vv1 <- rowVar(XStable[, g1]) / 100; vv2 <- rowVar(XStable[, g2]) / 100
-    validStable[i] <- count_valid(vv1, vv2)
-    fracZeroStable[i] <- mean(c(sum(is_zero_row(DataStable[g1, , drop = FALSE])),
-                                 sum(is_zero_row(DataStable[g2, , drop = FALSE])))) / 100
-  }
-
-  # 3) Control analysis, aperiodic regime: same random-sample approach and
-  #    the same grid-validity diagnostic (no aperiodic series is identically
-  #    zero, so there is no zero-fraction to report here).
-  XAperiodic <- eval.fd(argvals, fdAperiodic)
-  pvalsAperiodic <- numeric(n_splits)
-  validAperiodic <- integer(n_splits)
-  for (i in seq_len(n_splits)) {
-    g1 <- sample(1:200, 100); g2 <- setdiff(1:200, g1)
-    pvalsAperiodic[i] <- vtperm(XAperiodic, g1, g2, nperm = 10000)$pval
-    vv1 <- rowVar(XAperiodic[, g1]) / 100; vv2 <- rowVar(XAperiodic[, g2]) / 100
-    validAperiodic[i] <- count_valid(vv1, vv2)
-  }
-
-  cached <- list(
-    input_hash = input_hash, test1 = test1, test1_diag = test1_diag,
-    pvalsStable = pvalsStable, pvalsAperiodic = pvalsAperiodic,
-    validStable = validStable, validAperiodic = validAperiodic,
-    fracZeroStable = fracZeroStable
-  )
-  saveRDS(cached, cache_file)
-}
-
-test1          <- cached$test1
-test1_diag     <- cached$test1_diag
-pvalsStable    <- cached$pvalsStable
-pvalsAperiodic <- cached$pvalsAperiodic
-validStable    <- cached$validStable
-validAperiodic <- cached$validAperiodic
-fracZeroStable <- cached$fracZeroStable
+test1          <- res_main$test1
+test1_diag     <- res_main$test1_diag
+pvalsStable    <- res_main$pvalsStable
+pvalsAperiodic <- res_main$pvalsAperiodic
+validStable    <- res_main$validStable
+validAperiodic <- res_main$validAperiodic
+fracZeroStable <- res_main$fracZeroStable
 
 stopifnot(
   "Expected 200 stable control splits"    = length(pvalsStable) == 200,
   "Expected 200 aperiodic control splits" = length(pvalsAperiodic) == 200
 )
 
-# After the burn-in every stable landscape is identically zero, so each
-# within-stable split compares constant curves and the statistic is undefined.
-# vtperm returns NA in that case; assert that the degeneracy is total rather
-# than intermittent, since a partial degeneracy would signal a bug instead of
-# the expected absence of signal.
+# With the transient retained, most stable landscapes carry genuine (if
+# grid-sampled-as-zero) H1 signal, so a within-stable split should NOT be
+# degenerate here -- this flag exists so the same vtperm()/fmt() machinery
+# below can be reused unchanged for the burn-in appendix in "The
+# approach-to-equilibrium transient" section, where discarding the transient
+# DOES make every within-stable split degenerate (every stable landscape
+# becomes identically zero there, not just a grid-resolution artefact).
 stable_control_degenerate <- all(is.na(pvalsStable))
 
-# Formatting helper: report "undefined" where the statistic does not exist.
+# Formatting helper: report "undefined" where the statistic does not exist
+# (this triggers for the stable control in the burn-in appendix below, not
+# in the main analysis here).
 fmt <- function(x, degenerate, pct = FALSE) {
   if (isTRUE(degenerate)) return("undefined")
   sprintf(if (pct) "%.1f%%" else "%.3f", x)
@@ -727,6 +759,278 @@ to zero correctly fails to reject, which is a much lower bar. Taken together,
 they still calibrate the significance of the stable-vs-aperiodic result
 above: the rejection there reflects a real difference between regimes, not a
 general tendency of the test to over-reject.
+
+## The approach-to-equilibrium transient
+
+Everything above uses `beetles_landscapes.ipynb` at its default `BURN_IN = 0`:
+the retained 201-step series starts right after the random initial condition,
+not after the population has settled onto its attractor — matching
+`Example1Beetles.Rmd`, which this chapter replicates and which never discards
+an initial transient either. This section makes that choice explicit. It (1)
+derives, in closed form, *why* the stable regime's approach to equilibrium
+registers as an H1 loop at all; (2) corrects a claim that is easy to make too
+quickly from the structural check above — an identically-zero *landscape* is
+not the same thing as an empty H1 *diagram*; and (3) quantifies, via a
+dedicated `BURN_IN = 200` sensitivity run, how much of the topological signal
+is attributable to the transient, and why discarding it would have left the
+main analysis without a working calibration check. None of this changes the
+result above; it explains it.
+
+### The mechanism: a damped spiral onto the fixed point
+
+The stable regime (`u_a = 0.73`) is a point attractor: the deterministic LPA
+map has a single fixed point that every trajectory in this regime converges
+to. Finding it by direct iteration and linearising there (the Jacobian of the
+LPA map) characterises *how* that convergence happens:
+
+```{r stable-fixedpoint}
+#| echo: true
+B_    <- 7.48; C_EA_ <- 0.009; C_PA_ <- 0.004; C_EL_ <- 0.012; U_L_ <- 0.267
+U_A_STABLE_ <- 0.73
+
+lpa_step_ <- function(state, u_a) {
+  L <- state[1]; P <- state[2]; A <- state[3]
+  c(
+    B_ * A * exp(-C_EL_ * L - C_EA_ * A),
+    L * (1 - U_L_),
+    P * exp(-C_PA_ * A) + A * (1 - u_a)
+  )
+}
+
+# The map is a contraction at the fixed point (see the Jacobian below), so
+# direct iteration from an arbitrary interior starting point converges to
+# machine precision regardless of where it starts.
+state <- c(50, 30, 60)
+for (i in 1:5000) state <- lpa_step_(state, U_A_STABLE_)
+fixed_point <- state
+names(fixed_point) <- c("L", "P", "A")
+fixed_point
+
+lpa_jacobian_ <- function(state, u_a) {
+  L <- state[1]; P <- state[2]; A <- state[3]
+  e <- exp(-C_EL_ * L - C_EA_ * A)
+  matrix(c(
+    -C_EL_ * B_ * A * e, 0,                  B_ * e - C_EA_ * B_ * A * e,
+    1 - U_L_,            0,                  0,
+    0,                   exp(-C_PA_ * A),   -C_PA_ * P * exp(-C_PA_ * A) + (1 - u_a)
+  ), nrow = 3, byrow = TRUE)
+}
+
+eig <- eigen(lpa_jacobian_(fixed_point, U_A_STABLE_))$values
+eig
+Mod(eig)
+
+lambda_complex   <- eig[abs(Im(eig)) > 1e-8][1]
+rotation_period  <- 2 * pi / abs(Arg(lambda_complex))
+contraction_step <- Mod(lambda_complex)
+```
+
+The fixed point is `(L, P, A)` $\approx$
+(`r sprintf("%.3f", fixed_point[1])`, `r sprintf("%.3f", fixed_point[2])`,
+`r sprintf("%.3f", fixed_point[3])`), and the Jacobian there has a
+**complex-conjugate eigenvalue pair** ($\lambda \approx$
+`r sprintf("%.4f", Re(lambda_complex))` $\pm$
+`r sprintf("%.4f", abs(Im(lambda_complex)))`$i$, modulus $\approx$
+`r sprintf("%.4f", contraction_step)`) alongside a real eigenvalue
+($\approx$ `r sprintf("%.4f", Re(eig[abs(Im(eig)) < 1e-8]))`). A complex
+eigenvalue pair means the linearised dynamics near the fixed point are a
+**rotation composed with a contraction**: every trajectory spirals in rather
+than approaching monotonically. The rotation completes a full turn every
+$2\pi / |\mathrm{Arg}(\lambda)| \approx$
+`r sprintf("%.2f", rotation_period)` steps, while each step shrinks the
+distance to the fixed point by a factor of $|\lambda| \approx$
+`r sprintf("%.4f", contraction_step)`.
+
+This matters for persistent homology specifically because **a spiral is a
+closed curve** when it is embedded in a delay-coordinate phase space: over
+one rotation period the trajectory loops most of the way around the fixed
+point before contracting to the next, smaller loop. Takens embedding turns
+this into a point cloud that traces something topologically indistinguishable,
+at the resolution of a single loop, from a genuine cycle — so Vietoris–Rips
+persistent homology registers an H1 feature for it, even though the spiral is
+not part of the attractor itself and vanishes (in principle, at infinite
+resolution) as $t \to \infty$. The stable regime's attractor, the fixed point
+alone, truly has no loops; the finite-length *approach* to it does.
+
+### The corrected claim: absence on the grid, not absence of homology
+
+The structural check above found `r n_stable_zero` of 200 stable landscapes
+identically zero on the shared evaluation grid. Read on its own, that number
+invites the conclusion "these series have no H1 features" — but that
+conclusion is wrong. Every stable series still carries the decaying spiral
+just derived, which is a genuine (if short-lived) H1 loop; the other
+`r 200 - n_stable_zero` of 200 (`r sprintf("%.0f%%", 100*(200-n_stable_zero)/200)`)
+already show it directly, with a landscape that survives on the grid. A prior
+diagnostic run of `regime_diagnostics.py` (committed as
+`regime_diagnostics_output.txt`) makes the resolution effect explicit: over a
+fresh no-burn-in simulation, **every** stable series' H1 diagram was
+non-empty, yet the median of each series' maximum H1 lifetime was only
+`0.00022` — well below the shared grid's point spacing, which is
+`r sprintf("%.5f", diff(tseq)[1])` for the actual committed grid used
+throughout this document (`0.00153` for that diagnostic run's own grid). A
+persistence landscape evaluates to zero at grid point $t$ whenever no
+birth–death interval contains $t$; a feature with lifetime shorter than the
+grid spacing can fail to contain *any* grid point purely by bad luck of where
+the birth falls relative to the nearest sample, independent of whether the
+feature is topologically real. So: the feature exists, and is invisible to
+this particular 500-point sampling, not absent. This is a sampling-resolution
+statement, not a homological one.
+
+### Sensitivity run: discarding the transient (`BURN_IN = 200`)
+
+To isolate the two **attractors** — comparing "fixed point" against "closed
+orbit" instead of "fixed point + approach spiral" against "closed orbit +
+approach transient" — `beetles_landscapes.ipynb` can be re-run with
+`BURN_IN = 200` (an *additional* 200 steps simulated and discarded before the
+retained 201-step series begins, so series length, embedding and grid are
+unchanged). That run is committed in `output_burnin/`, analysed here with
+exactly the same pipeline used for the main analysis above.
+
+```{r burnin-appendix}
+tseq_burnin        <- as.matrix(read.csv("output_burnin/tseq.csv", header = FALSE))[, 1]
+DataStable_burnin    <- as.matrix(read.csv("output_burnin/stable_landscapes.csv", header = FALSE))
+DataAperiodic_burnin <- as.matrix(read.csv("output_burnin/aperiodic_landscapes.csv", header = FALSE))
+
+n_stable_zero_burnin      <- sum(is_zero_row(DataStable_burnin))
+mean_max_aperiodic_burnin <- mean(apply(DataAperiodic_burnin, 1, max))
+
+fdStable_burnin    <- create_fd(DataStable_burnin, tseq_burnin)
+fdAperiodic_burnin <- create_fd(DataAperiodic_burnin, tseq_burnin)
+fdBoth_burnin      <- create_fd(rbind(DataStable_burnin, DataAperiodic_burnin), tseq_burnin)
+
+pca_burnin     <- pca.fd(fdBoth_burnin, nharm = 2)
+pc1_pct_burnin <- pca_burnin$varprop[1] * 100
+pc2_pct_burnin <- pca_burnin$varprop[2] * 100
+
+pc1_raw_burnin  <- pca_burnin$scores[, 1]
+sign_fix_burnin <- if (mean(pc1_raw_burnin[1:200]) > 0) -1 else 1
+PC1_burnin      <- sign_fix_burnin * pc1_raw_burnin
+n_aperiodic_pc1_neg_burnin <- sum(PC1_burnin[201:400] < 0)
+
+res_burnin <- run_permtest_suite(
+  DataStable_burnin, fdStable_burnin, fdAperiodic_burnin, tseq_burnin,
+  input_files = c("output_burnin/tseq.csv", "output_burnin/stable_landscapes.csv", "output_burnin/aperiodic_landscapes.csv"),
+  cache_file  = "output_burnin/results_partB_permtest_cache.rds"
+)
+test1_burnin <- res_burnin$test1
+stable_control_degenerate_burnin <- all(is.na(res_burnin$pvalsStable))
+
+stopifnot(
+  "Burn-in n_stable_zero far from sanity-check value" =
+    n_stable_zero_burnin == ref_burnin$n_stable_zero,
+  "Burn-in mean aperiodic peak far from sanity-check value" =
+    abs(mean_max_aperiodic_burnin - ref_burnin$mean_max_aperiodic) < 0.02,
+  "Burn-in PC1 far from sanity-check value" = abs(pc1_pct_burnin - ref_burnin$pc1_pct) < 2,
+  "Burn-in PC2 far from sanity-check value" = abs(pc2_pct_burnin - ref_burnin$pc2_pct) < 2,
+  "Burn-in aperiodic PC1<0 count far from sanity-check value" =
+    abs(n_aperiodic_pc1_neg_burnin - ref_burnin$n_aperiodic_pc1_neg) <= 5,
+  "Burn-in Tobs far from sanity-check value" = abs(test1_burnin$Tobs - ref_burnin$test1_Tobs) < 15,
+  "Burn-in crit95 far from sanity-check value" = abs(test1_burnin$crit95 - ref_burnin$test1_crit95) < 0.5,
+  "Expected the burn-in stable control to be fully degenerate" = stable_control_degenerate_burnin
+)
+```
+
+| Metric | Main (no burn-in) | Burn-in appendix |
+|---|---:|---:|
+| Stable landscapes identically zero | `r n_stable_zero` / 200 | `r n_stable_zero_burnin` / 200 |
+| Mean aperiodic landscape peak | `r sprintf("%.4f", mean_max_aperiodic)` | `r sprintf("%.4f", mean_max_aperiodic_burnin)` |
+| PC1 / PC2 variance explained | `r sprintf("%.1f%%", pc1_pct)` / `r sprintf("%.1f%%", pc2_pct)` | `r sprintf("%.1f%%", pc1_pct_burnin)` / `r sprintf("%.1f%%", pc2_pct_burnin)` |
+| Aperiodic with PC1 < 0 | `r n_aperiodic_pc1_neg` / 200 | `r n_aperiodic_pc1_neg_burnin` / 200 |
+| Stable vs. aperiodic $T_{max}$ (crit95) | `r sprintf("%.2f", test1$Tobs)` (`r sprintf("%.2f", test1$crit95)`) | `r sprintf("%.2f", test1_burnin$Tobs)` (`r sprintf("%.2f", test1_burnin$crit95)`) |
+| Within-stable control | defined (mean p $\approx$ `r sprintf("%.2f", mean(pvalsStable))`) | `r if (stable_control_degenerate_burnin) "undefined (degenerate)" else "defined"` |
+
+Discarding the transient does exactly what removing an approach spiral should
+do: every stable landscape collapses to identically zero
+(`r n_stable_zero_burnin`/200, versus `r n_stable_zero`/200 with the
+transient retained), PC1 alone explains essentially all the variance
+(`r sprintf("%.1f%%", pc1_pct_burnin)`), and the stable-vs-aperiodic
+separation gets *sharper*, not weaker ($T_{max}$
+`r sprintf("%.2f", test1_burnin$Tobs)` versus
+`r sprintf("%.2f", test1$Tobs)`; aperiodic overlap into PC1 < 0 drops to
+`r n_aperiodic_pc1_neg_burnin`/200 from `r n_aperiodic_pc1_neg`/200).
+
+**The compensation.** That sharper separation comes at a real cost: with
+every stable landscape collapsed to the same identically-zero curve, a
+within-stable split has **zero pooled variance at every grid point**, so
+`vtperm()`'s `NA_real_` guard (kept and explained in the code above)
+triggers for all `r length(res_burnin$pvalsStable)` splits, and the
+within-stable calibration control that works in the main analysis becomes
+mathematically undefined here — there is no variability left to split. This
+is precisely why the main analysis above retains the transient: it is the
+only version of this pipeline in which the within-stable control is a
+meaningful check rather than an ungrounded "compare zero to zero" tautology,
+and losing that check to gain a cleaner-looking separation was judged not
+worth it, especially since the separation was already decisive
+(`p < 1e-4`) with the transient retained.
+
+### Where the transient's effect kicks in: a burn-in sweep
+
+The two runs above are single points (`BURN_IN` 0 and 200) on a continuum.
+`beetles_landscapes.ipynb` sweeps a grid of burn-in values, each with a
+smaller 60-series-per-regime cohort (fixed seed, same model), recording how
+many stable series have a genuinely empty H1 diagram and the aperiodic
+regime's mean landscape peak, written to `output/burnin_sweep.csv`:
+
+```{r burnin-sweep-table}
+#| echo: true
+sweep <- read.csv("output/burnin_sweep.csv")
+sweep$pct_stable_h1_empty <- sprintf("%.0f%%", 100 * sweep$n_stable_h1_empty / sweep$n_sweep)
+knitr::kable(
+  data.frame(
+    `Burn-in`                    = sweep$burn_in,
+    `Stable, H1 empty`           = sprintf("%d / %d (%s)", sweep$n_stable_h1_empty, sweep$n_sweep, sweep$pct_stable_h1_empty),
+    `Mean aperiodic peak`        = sprintf("%.4f", sweep$mean_aperiodic_peak),
+    check.names = FALSE
+  ),
+  align = "lrr"
+)
+```
+
+The empirical transition is abrupt, not gradual: essentially none of the 60
+stable series have an empty H1 diagram through burn-in 100, then almost all
+of them do by burn-in 140–150. That matches the mechanism derived above:
+because the stable regime's approach is a *contraction*, its transient decays
+geometrically at rate $|\lambda| \approx$ `r sprintf("%.4f", contraction_step)`
+per step, so there is a fairly sharp burn-in past which the spiral's
+remaining radius falls below what any trajectory in this system can resolve —
+not a slow fade. Equating "remaining radius has shrunk by 16 orders of
+magnitude" ($16 \ln 10$, an arbitrary but generous margin) with $n$ steps of
+that contraction gives a threshold of $16\ln(10) / (-\ln|\lambda|) \approx$
+`r sprintf("%.0f", 16*log(10)/(-log(contraction_step)))` steps — close to
+where the sweep actually crosses over.
+
+The aperiodic regime's mean landscape peak, by contrast, is still visibly
+increasing at burn-in 200 (`r sprintf("%.4f", sweep$mean_aperiodic_peak[sweep$burn_in==200])`)
+and has not fully leveled off even by burn-in 800
+(`r sprintf("%.4f", sweep$mean_aperiodic_peak[sweep$burn_in==800])`). This is
+consistent with the aperiodic regime's own approach dynamics: `regime_diagnostics.py`'s
+Lyapunov spectrum for `u_a = 0.96` gives a near-zero exponent along the
+invariant curve itself (motion *on* the attractor does not decay) and a much
+smaller contracting exponent transverse to it, $\approx -0.0167$, versus the
+stable regime's $-\ln|\lambda| \approx$
+`r sprintf("%.4f", -log(contraction_step))` derived above — the aperiodic
+transient decays roughly `r sprintf("%.1f", -log(contraction_step)/0.016674)`
+times more slowly per step than the stable one, not the "about 40 times" this
+document's brief anticipated; that number is reported here as computed,
+flagged as a deviation from that expectation rather than adjusted to match
+it. At either figure, `BURN_IN = 200` sits well short of full convergence for
+the aperiodic regime, even though it is already far past the stable regime's
+threshold.
+
+### Conclusion
+
+Discarding the transient sharpens an already-decisive result; it does not
+create it. With the transient retained (the main analysis above), the
+stable-vs-aperiodic separation is significant at `p < 1e-4` with 42 of 200
+aperiodic series still overlapping the stable cloud on PC1 — a real but
+incomplete separation, honestly reported. The burn-in appendix quantifies the
+alternative: removing the transient pushes that overlap down to
+`r n_aperiodic_pc1_neg_burnin`/200 and sharpens $T_{max}$, at the cost of
+making the within-stable calibration control undefined. Between a replica
+that keeps the heritage pipeline's transient and a variant that discards it
+for a cleaner-looking (but uncalibrated) result, the main analysis keeps the
+transient — consistent with the brief received from the thesis director, who
+asked that dropping it be discussed, not adopted outright.
 
 ## Appendix
 
