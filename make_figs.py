@@ -156,20 +156,18 @@ axes[1, 0].set_xlabel('Time step')
 axes[1, 0].set_ylabel('Adult population (A)')
 axes[1, 0].grid(True, alpha=0.3)
 
-# Landscapes are plotted on INDEPENDENT y-scales. After the Part B burn-in
-# fix, every stable series has converged to the fixed point before the
-# retained window starts, so its Takens embedding is a single repeated
-# point with no H1 loop: all 200 stable landscapes (not just this panel's
-# 40-series subset) are identically zero. A shared axis would put the
-# stable panel's own y-range at (0, 0), so it gets a small fixed fallback
-# range instead (zero_safe_ylim), with a text label stating this directly
-# rather than reporting a peak of 0.00.
+# Landscapes are plotted on INDEPENDENT y-scales: the stable regime's peak
+# is always far smaller than the aperiodic one (whether it samples to
+# exactly zero on the grid, as with a burn-in, or to a small transient
+# loop, as in the heritage no-burn-in run), so a shared axis would flatten
+# it to nothing. zero_safe_ylim falls back to a small fixed range only in
+# the exactly-zero case; the text label reports whichever is true.
 for i in range(40):
     axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.55, linewidth=1.1)
-axes[0, 1].set_title('H1 landscapes — Stable  (identically zero)')
+stable_peak_40 = stable_ls_all[:40].max()
+axes[0, 1].set_title('H1 landscapes — Stable' + ('  (identically zero)' if stable_peak_40 == 0 else ''))
 axes[0, 1].set_xlabel('Filtration value')
 axes[0, 1].set_ylabel('λ₁(t)')
-stable_peak_40 = stable_ls_all[:40].max()
 axes[0, 1].set_ylim(*zero_safe_ylim(stable_peak_40))
 axes[0, 1].grid(True, alpha=0.3)
 stable_label_40 = 'identically zero' if stable_peak_40 == 0 else f'peak ≈ {stable_peak_40:.2f}'
@@ -195,14 +193,11 @@ print('figures/timeseries_to_landscape.png saved')
 
 # ─── Figure 4: landscapes_individual_dark.png ─────────────────────────────────
 
-# Two panels with INDEPENDENT y-scales. After the Part B burn-in fix, every
-# stable series (all 200, not just this panel's 50-series subset) has
-# converged to the fixed point before the retained window starts, so its
-# landscape is identically zero -- there is no "smaller" scale to share, a
-# shared axis would just show a flat line at 0. The stable panel gets a
-# small fixed fallback range (zero_safe_ylim) so it doesn't collapse to
-# nothing, and a text label stating the landscape is zero rather than a
-# peak value.
+# Two panels with INDEPENDENT y-scales: the stable regime's peak is always
+# far smaller than the aperiodic one, whether it samples to exactly zero on
+# the grid (a burn-in run) or to a small transient loop (the heritage
+# no-burn-in run), so a shared axis would flatten it out. zero_safe_ylim
+# falls back to a small fixed range only in the exactly-zero case.
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
@@ -227,9 +222,13 @@ axes[1].grid(True, alpha=0.3)
 axes[1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:50].max():.2f}',
              transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color='#C85A12')
 
-fig.suptitle('H1 persistence landscapes — the stable regime is identically zero\n'
-             '(after the burn-in, its attractor is a fixed point with no H1 loop; see results_partB.qmd)',
-             fontsize=12)
+fig.suptitle(
+    'H1 persistence landscapes — the stable regime is identically zero\n'
+    '(its attractor is a fixed point with no H1 loop; see results_partB.qmd)'
+    if stable_peak_50 == 0 else
+    'H1 persistence landscapes — the stable regime carries only a small transient loop\n'
+    '(the approach to the fixed point, not the attractor itself; see results_partB.qmd)',
+    fontsize=12)
 
 plt.tight_layout()
 plt.savefig(FIGURES_DIR / 'landscapes_individual_dark.png', dpi=200, bbox_inches='tight')
