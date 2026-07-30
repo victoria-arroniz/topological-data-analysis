@@ -144,13 +144,13 @@ tseq_ts          = np.loadtxt(ts_output_dir / 'tseq.csv', delimiter=',')
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 
 t_ax = np.arange(80)
-axes[0, 0].plot(t_ax, stable_ts[:80], color='#16336E', linewidth=1.8)
+axes[0, 0].plot(t_ax, stable_ts[:80], color='#1a5fa8', linewidth=1.8)
 axes[0, 0].set_title('Stable regime (u_a = 0.73)')
 axes[0, 0].set_xlabel('Time step')
 axes[0, 0].set_ylabel('Adult population (A)')
 axes[0, 0].grid(True, alpha=0.3)
 
-axes[1, 0].plot(t_ax, aperiodic_ts[:80], color='#C85A12', linewidth=1.8)
+axes[1, 0].plot(t_ax, aperiodic_ts[:80], color='darkorange', linewidth=1.8)
 axes[1, 0].set_title('Aperiodic regime (u_a = 0.96)')
 axes[1, 0].set_xlabel('Time step')
 axes[1, 0].set_ylabel('Adult population (A)')
@@ -162,8 +162,10 @@ axes[1, 0].grid(True, alpha=0.3)
 # loop, as in the heritage no-burn-in run), so a shared axis would flatten
 # it to nothing. zero_safe_ylim falls back to a small fixed range only in
 # the exactly-zero case; the text label reports whichever is true.
+# Colors (#1a5fa8 / darkorange) match ts_individual_landscapes.png and the
+# rest of the notebook-generated figures, for visual consistency.
 for i in range(40):
-    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.55, linewidth=1.1)
+    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#1a5fa8', alpha=0.55, linewidth=1.1)
 stable_peak_40 = stable_ls_all[:40].max()
 axes[0, 1].set_title('H1 landscapes — Stable' + ('  (identically zero)' if stable_peak_40 == 0 else ''))
 axes[0, 1].set_xlabel('Filtration value')
@@ -173,10 +175,10 @@ axes[0, 1].grid(True, alpha=0.3)
 stable_label_40 = 'identically zero' if stable_peak_40 == 0 else f'peak ≈ {stable_peak_40:.2f}'
 axes[0, 1].text(0.97, 0.92, stable_label_40,
                 transform=axes[0, 1].transAxes, ha='right', va='top',
-                fontsize=9, color='#16336E')
+                fontsize=9, color='#1a5fa8')
 
 for i in range(40):
-    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.55, linewidth=1.1)
+    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color='darkorange', alpha=0.55, linewidth=1.1)
 axes[1, 1].set_title('H1 landscapes — Aperiodic')
 axes[1, 1].set_xlabel('Filtration value')
 axes[1, 1].set_ylabel('λ₁(t)')
@@ -184,7 +186,7 @@ axes[1, 1].set_ylim(0, aperiodic_ls_all[:40].max() * 1.10)
 axes[1, 1].grid(True, alpha=0.3)
 axes[1, 1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:40].max():.2f}',
                 transform=axes[1, 1].transAxes, ha='right', va='top',
-                fontsize=9, color='#C85A12')
+                fontsize=9, color='darkorange')
 
 plt.tight_layout()
 plt.savefig(FIGURES_DIR / 'timeseries_to_landscape.png', dpi=200, bbox_inches='tight')
@@ -236,14 +238,16 @@ plt.close()
 print('figures/landscapes_individual_dark.png saved')
 
 # ─── Figure 4b: landscapes_overlaid.png (both regimes, same axis) ──────────────
+# Colors (#1a5fa8 / darkorange) match ts_individual_landscapes.png and the
+# rest of the notebook-generated figures, for visual consistency.
 fig, ax = plt.subplots(figsize=(10, 4.2))
 for i in range(50):
-    ax.plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.45, linewidth=1.1, zorder=1)
+    ax.plot(tseq_ts, aperiodic_ls_all[i], color='darkorange', alpha=0.45, linewidth=1.1, zorder=1)
 for i in range(50):
-    ax.plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.85, linewidth=1.3, zorder=2)
+    ax.plot(tseq_ts, stable_ls_all[i], color='#1a5fa8', alpha=0.85, linewidth=1.3, zorder=2)
 handles = [
-    Line2D([0], [0], color='#16336E', linewidth=2.5, label='Stable (regular)'),
-    Line2D([0], [0], color='#C85A12', linewidth=2.5, label='Aperiodic (irregular)'),
+    Line2D([0], [0], color='#1a5fa8', linewidth=2.5, label='Stable (regular)'),
+    Line2D([0], [0], color='darkorange', linewidth=2.5, label='Aperiodic (irregular)'),
 ]
 ax.legend(handles=handles, fontsize=12, loc='upper right')
 ax.set_xlabel('Filtration value')
