@@ -5,6 +5,7 @@ from matplotlib.lines import Line2D
 import numpy as np
 import os
 import glob
+import shutil
 import networkx as nx
 from pathlib import Path
 
@@ -204,7 +205,7 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
     axes[0].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.6, linewidth=1.2)
-axes[0].set_title('Stable (regular)', color='#16336E', fontsize=13, fontweight='bold')
+axes[0].set_title('Stable', color='#16336E', fontsize=13, fontweight='bold')
 axes[0].set_xlabel('Filtration value')
 axes[0].set_ylabel('λ₁(t)')
 stable_peak_50 = stable_ls_all[:50].max()
@@ -216,7 +217,7 @@ axes[0].text(0.97, 0.92, stable_label_50,
 
 for i in range(50):
     axes[1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.6, linewidth=1.2)
-axes[1].set_title('Aperiodic (irregular)', color='#C85A12', fontsize=13, fontweight='bold')
+axes[1].set_title('Aperiodic', color='#C85A12', fontsize=13, fontweight='bold')
 axes[1].set_xlabel('Filtration value')
 axes[1].set_ylabel('λ₁(t)')
 axes[1].set_ylim(0, aperiodic_ls_all[:50].max() * 1.10)
@@ -246,8 +247,8 @@ for i in range(50):
 for i in range(50):
     ax.plot(tseq_ts, stable_ls_all[i], color='#1a5fa8', alpha=0.85, linewidth=1.3, zorder=2)
 handles = [
-    Line2D([0], [0], color='#1a5fa8', linewidth=2.5, label='Stable (regular)'),
-    Line2D([0], [0], color='darkorange', linewidth=2.5, label='Aperiodic (irregular)'),
+    Line2D([0], [0], color='#1a5fa8', linewidth=2.5, label='Stable'),
+    Line2D([0], [0], color='darkorange', linewidth=2.5, label='Aperiodic'),
 ]
 ax.legend(handles=handles, fontsize=12, loc='upper right')
 ax.set_xlabel('Filtration value')
@@ -258,3 +259,21 @@ plt.tight_layout()
 plt.savefig(FIGURES_DIR / 'landscapes_overlaid.png', dpi=200, bbox_inches='tight')
 plt.close()
 print('figures/landscapes_overlaid.png saved')
+
+# ─── Copy to the memoria, if present ───────────────────────────────────────────
+
+# The memoria lives outside this repository, so a standalone clone must still
+# run this script cleanly. The previous approach (copying by hand after each
+# regeneration) silently went stale once ResearchProject_UCD/figures/ was
+# renamed from TFM_UCD/figures/, and nobody noticed until the figures were
+# checked against dates. Failing loudly here instead of copying by hand.
+thesis_figs = ROOT.parent / 'ResearchProject_UCD' / 'figures'
+if thesis_figs.is_dir():
+    for src_name, dst_name in [
+        ('timeseries_to_landscape.png', 'ts_timeseries_to_landscape.png'),
+        ('landscapes_overlaid.png', 'ts_landscapes_overlaid.png'),
+    ]:
+        shutil.copyfile(FIGURES_DIR / src_name, thesis_figs / dst_name)
+        print(f'copied {src_name} -> {thesis_figs / dst_name}')
+else:
+    print('thesis figures directory not found; skipping export')
