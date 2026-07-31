@@ -16,11 +16,20 @@ __pycache__/
 .venv/
 venv/
 
-# Quarto transient render artifacts (results_partA.html itself IS committed)
+# Quarto transient render artifacts.
 /.quarto/
 *.knit.md
 *_files/
 *_cache/
+
+# Rendered HTML reports. Derived artifacts, regenerable with `quarto render`,
+# and not worth versioning: at ~4 MB each they are past GitHub's file-display
+# limit, and GitHub shows raw source for .html rather than rendering it, so the
+# committed copies could not be read on the site at all. The PDF renders of the
+# same documents ARE committed and do preview inline, which is what the README
+# points readers to. Render locally, or publish to Pages, if you want the HTML.
+results_partA.html
+results_partB.html
 
 # Leftover intermediate files from a PDF (xelatex) render that gets
 # interrupted or run with a keep-tex-style option — none of these are ever
@@ -41,8 +50,8 @@ figures/
 # Imaging data for the images branch (Chapter 5): DICOM series plus the
 # accompanying manifest. NEVER commit this.
 #
-#   * It is human subject data — 19 participants with sex, age and clinical
-#     group (Control / PD) in data.csv — and this repository is public.
+#   * It is human subject data — 16 participants (8 Control, 8 PD) with sex,
+#     age and clinical group in data.csv — and this repository is public.
 #   * It is redistributed under a Data Use Agreement that does not permit
 #     republication; the DUA is with the data provider, not with this project.
 #   * It is ~163 MB across ~3,650 files, far past what git should carry.
