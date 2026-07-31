@@ -51,7 +51,11 @@ ref <- list(
   mean_max_stable = 0.0016, mean_max_aperiodic = 0.227,
   pc1_pct = 84, pc2_pct = 13,
   n_aperiodic_pc1_neg = 42,
-  test1_Tobs = 85.5, test1_crit95 = 2.85,
+  test1_Tobs = 85.5, test1_crit95 = 2.75,
+  # Ratio of the two regimes' mean pointwise variance, on the same 101-point
+  # grid the permutation test evaluates on. Reported in the exchangeability
+  # subsection below; it is a descriptive quantity, not part of any test.
+  var_ratio = 3500,
   # With the transient retained, the stable regime is NOT uniformly zero (71
   # of 200 landscapes carry genuine H1 signal above the grid's resolution),
   # so a within-stable split has positive pooled variance almost everywhere
@@ -214,8 +218,9 @@ exists and quantifies the gap between feature lifetime and grid spacing.
 Consistent with a real but small signal rather than a true absence, the mean
 of each series' landscape peak is **`r sprintf("%.4f", mean_max_stable)`** for
 stable series versus **`r sprintf("%.4f", mean_max_aperiodic)`** for aperiodic
-ones — roughly a 150-fold difference in typical peak height, not a zero-vs-
-nonzero one.
+ones — roughly a
+`r sprintf("%.0f", round(mean_max_aperiodic / mean_max_stable, -1))`-fold difference in
+typical peak height, not a zero-vs-nonzero one.
 
 ```{r zero-landscape-asserts}
 tol_meanmax <- 0.02
@@ -642,6 +647,50 @@ never compared against each other, and neither is a test of functional
 equality between group means. The permutation test here instead directly
 tests whether the *entire mean landscape curves* differ, which is the same
 kind of claim Part A makes about asymptomatic vs. symptomatic GRNs.
+
+### What the test assumes, and where this design strains it
+
+Calibrating `T_max` by permutation rests on the two samples being
+*exchangeable* under the null: reassigning curves between groups has to
+produce two samples that could plausibly have been drawn from one common
+distribution, or the permutation null is not the null being tested. This
+design strains that assumption harder than Part A's did. A stable landscape
+is near-zero everywhere and an aperiodic one is a full-amplitude curve, so
+swapping one for the other does not produce two comparable samples in any
+meaningful sense — it produces two samples that are obviously mixtures. The
+chunk below quantifies the gap on the same 101-point grid the test evaluates
+on. It is descriptive: it feeds nothing, and consumes no random numbers, so
+it cannot change which permutations were drawn above.
+
+```{r exchangeability-variance}
+argvals_diag <- seq(min(tseq), max(tseq), length.out = 101)
+XS_diag <- eval.fd(argvals_diag, fdStable)
+XA_diag <- eval.fd(argvals_diag, fdAperiodic)
+
+var_stable    <- mean(rowVar(XS_diag))
+var_aperiodic <- mean(rowVar(XA_diag))
+var_ratio     <- var_aperiodic / var_stable
+
+stopifnot(
+  "Pointwise variance ratio far from sanity-check value" =
+    abs(var_ratio - ref$var_ratio) < 500
+)
+```
+
+Averaged over the grid, the pointwise variance of the aperiodic landscapes is
+`r sprintf("%.2e", var_aperiodic)` against `r sprintf("%.2e", var_stable)` for
+the stable ones, a factor of roughly
+**`r format(round(var_ratio, -2), big.mark = ",", scientific = FALSE)`**. Two
+samples differing by three and a half orders of magnitude in dispersion are
+not exchangeable, so the reported p-value should be read with a caveat about
+*validity*, not only about interpretation. The within-stable control below is
+the natural place to probe this, and — as that section explains — it is the
+weaker of the two controls precisely because so many stable landscapes sample
+to zero. That the two regimes differ is not in doubt: the
+`r sprintf("%.0f", round(mean_max_aperiodic / mean_max_stable, -1))`-fold gap in
+landscape amplitude reported at the top of this document carries that
+conclusion on its own. What the p-value adds to it is more limited than its
+magnitude suggests.
 
 ## Control analysis (within-regime calibration)
 
