@@ -60,5 +60,15 @@ figures/
 # under their own agreement. Document the accession/query in the thesis instead.
 data/
 
+# Surface-projected functional data for the images branch: per-subject BOLD
+# timecourses on the fsaverage5 mesh (.func.gii), supplied by the supervisor.
+# Same rule as data/ above — human subject data, public repository, NEVER
+# commit it. Subject identifiers are in the filenames, so even the file listing
+# is identifying. The fsaverage5 geometry these files are defined on is NOT
+# subject data: it is a template, and it ships inside the `nilearn` package
+# (nilearn.datasets.fetch_surf_fsaverage), so nothing here needs to carry it.
+data_images/
+*.func.gii
+
 # Local reading copies of cited literature; not distributed with this repo.
 references/
