@@ -1,6 +1,14 @@
 # macOS
 .DS_Store
 
+# R session leftovers. Both copies in this repository are empty, but an
+# .Rhistory records whatever was typed at the console, which on this project
+# means paths and identifiers that must not be published. Ignore it by rule
+# rather than relying on it staying empty.
+.Rhistory
+.RData
+.Rproj.user/
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints
@@ -30,6 +38,7 @@ venv/
 # points readers to. Render locally, or publish to Pages, if you want the HTML.
 results_partA.html
 results_partB.html
+results_partC.html
 
 # Leftover intermediate files from a PDF (xelatex) render that gets
 # interrupted or run with a keep-tex-style option — none of these are ever
@@ -47,18 +56,38 @@ results_partB.html
 # changed in 6b245ce without the committed PNGs being regenerated to match).
 figures/
 
-# Imaging data for the images branch (Chapter 5): DICOM series plus the
-# accompanying manifest. NEVER commit this.
+# Exception: images/figures/ IS versioned. The rule above was written for the
+# repository-root figures/, but it matches any directory of that name, and the
+# anatomy figure of Part C has to be committed — it cannot be regenerated from
+# a clone, because it is drawn from DICOM that this repository cannot carry.
+!images/figures/
+!images/figures/**
+
+# Imaging data pulled from PPMI: resting-state fMRI DICOM series (rsfMRI_LR)
+# for 16 participants, plus the accompanying manifest. NEVER commit this.
 #
 #   * It is human subject data — 16 participants (8 Control, 8 PD) with sex,
 #     age and clinical group in data.csv — and this repository is public.
 #   * It is redistributed under a Data Use Agreement that does not permit
 #     republication; the DUA is with the data provider, not with this project.
-#   * It is ~163 MB across ~3,650 files, far past what git should carry.
+#   * It is ~150 MB across 3,652 files, far past what git should carry.
+#
+# Note this is the functional arm, which was not pursued: the T1 structural
+# data behind Chapter 5 never lived here, it lives outside the repository in
+# T1_data_def/ and deriv/.
 #
 # Anyone reproducing the images branch must request the data from the provider
 # under their own agreement. Document the accession/query in the thesis instead.
 data/
+
+# ...but a bare `data/` matches a directory of that name at ANY depth, and
+# funTDA/data/ holds the 17 GRN adjacency matrices that Part A reads. Those are
+# public H3N2 network data, they are small, and results_partA.qmd cannot run
+# without them. They survive today only because git ignores nothing already
+# tracked — remove them from the index once and they could not be added back
+# without -f, and a fresh clone would lose Part A silently. Hence the negation.
+!funTDA/data/
+!funTDA/data/**
 
 # Surface-projected functional data for the images branch: per-subject BOLD
 # timecourses on the fsaverage5 mesh (.func.gii), supplied by the supervisor.
@@ -72,3 +101,15 @@ data_images/
 
 # Local reading copies of cited literature; not distributed with this repo.
 references/
+
+# Part C (images): the alias -> PPMI identifier mapping produced by
+# images/export_for_repo.py. The exported diagrams and landscapes under
+# images/output/ ARE committed — they are topological summaries two steps
+# removed from the image and carry no identifier — but the file that maps
+# sub-01 ... sub-16 back to the PPMI subject numbers must never be. NEVER
+# commit this.
+images/subject_map.csv
+
+# FreeSurfer / FSL derivatives for Part C: several hundred MB of NIfTI, all
+# regenerable from the DICOM by images/pipeline/. Not versioned.
+images/deriv/
