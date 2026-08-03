@@ -47,8 +47,24 @@ ref <- list(
 )
 
 # Unified color palette for all figures in the document
-col_asymp <- "blue"
-col_symp  <- "orange"
+# Blue for the reference group, red for the contrast. These are the light pair
+# of the make_figs.py palette (COL_BLUE_LIGHT / COL_RED_LIGHT), not the base R
+# names "blue" and "red", which are pure primaries and read as harsh next to
+# the figures make_figs.py draws. Change them here, not at the point of use.
+col_asymp <- "#1a5fa8"
+col_symp  <- "#C0392B"
+
+# The memoria lives outside this repository, so a standalone clone must still
+# render cleanly: figures are exported to it only when the target directory is
+# actually present (checked at each call site). Three levels up, not two --
+# this file sits one directory deeper than results_partB.qmd.
+#
+# These five figures used to be copied by hand out of
+# results_partA_files/figure-pdf/, which only exists after a --to pdf render.
+# Nothing recorded that step, so the memoria silently kept the 21 July versions
+# through every later edit. Exporting them explicitly, as Part B already does,
+# makes the export happen on any render, HTML included.
+fig_dir <- "../../../ResearchProject_UCD/figures"
 ```
 
 ## Data
@@ -111,16 +127,28 @@ edge_width <- function(g) 0.4 + 1.6 * (igraph::E(g)$weight - w_rng[1]) / diff(w_
 set.seed(1); layoutA <- igraph::layout_in_circle(gA)
 set.seed(1); layoutS <- igraph::layout_in_circle(gS)
 
-par(mfrow = c(1, 2), mar = c(1, 1, 3, 1))
-plot(gA, layout = layoutA, vertex.size = 5, vertex.label = NA,
-     vertex.color = col_asymp, vertex.frame.color = col_asymp,
-     edge.width = edge_width(gA), edge.color = grDevices::adjustcolor(col_asymp, alpha.f = 0.4),
-     main = "Asymptomatic (subject 2)")
-plot(gS, layout = layoutS, vertex.size = 5, vertex.label = NA,
-     vertex.color = col_symp, vertex.frame.color = col_symp,
-     edge.width = edge_width(gS), edge.color = grDevices::adjustcolor(col_symp, alpha.f = 0.4),
-     main = "Symptomatic (subject 1)")
-par(mfrow = c(1, 1))
+draw_network_comparison <- function() {
+  par(mfrow = c(1, 2), mar = c(1, 1, 3, 1))
+  plot(gA, layout = layoutA, vertex.size = 5, vertex.label = NA,
+       vertex.color = col_asymp, vertex.frame.color = col_asymp,
+       edge.width = edge_width(gA), edge.color = grDevices::adjustcolor(col_asymp, alpha.f = 0.4),
+       main = "Asymptomatic (subject 2)")
+  plot(gS, layout = layoutS, vertex.size = 5, vertex.label = NA,
+       vertex.color = col_symp, vertex.frame.color = col_symp,
+       edge.width = edge_width(gS), edge.color = grDevices::adjustcolor(col_symp, alpha.f = 0.4),
+       main = "Symptomatic (subject 1)")
+  par(mfrow = c(1, 1))
+}
+draw_network_comparison()
+
+# Exported for the memoria. Base R graphics, so pdf()/dev.off() rather than
+# ggsave(); the size matches the chunk options above so the layout in the
+# memoria does not shift.
+if (dir.exists(fig_dir)) {
+  pdf(file.path(fig_dir, "network_comparison.pdf"), width = 10, height = 5)
+  draw_network_comparison()
+  invisible(dev.off())
+}
 ```
 
 No structural difference stands out between the two panels: density, node
@@ -251,7 +279,14 @@ landscape_plot <- ggplot(data.frame(t = tseq, lambda = ls_s1), aes(x = t, y = la
   theme_classic(base_size = 13) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-diagram_plot + landscape_plot
+diagram_landscape_example <- diagram_plot + landscape_plot
+diagram_landscape_example
+
+# Exported for the memoria (ResearchProject_UCD/figures/diagram_landscape_example.pdf).
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "diagram_landscape_example.pdf"), diagram_landscape_example,
+         width = 9, height = 4.5)
+}
 ```
 
 ### Landscapes by group
@@ -284,7 +319,14 @@ plot_group_landscapes <- function(df, group_label, col) {
 plot_asymp <- plot_group_landscapes(indiv_df[indiv_df$Group == "Asymptomatic", ], "Asymptomatic", col_asymp)
 plot_symp  <- plot_group_landscapes(indiv_df[indiv_df$Group == "Symptomatic", ], "Symptomatic", col_symp)
 
-plot_asymp + plot_symp
+group_landscape_comparison <- plot_asymp + plot_symp
+group_landscape_comparison
+
+# Exported for the memoria (ResearchProject_UCD/figures/group_landscape_comparison.pdf).
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "group_landscape_comparison.pdf"), group_landscape_comparison,
+         width = 6.5, height = 4.5)
+}
 ```
 
 ## Functional Principal Component Analysis (FPCA)
@@ -325,7 +367,7 @@ knitr::kable(
 
 ```{r fpca-plot}
 #| fig-cap: "PC1 vs PC2 scores (FPCA over H1 landscapes), colored by group"
-ggplot(pca_df, aes(x = PC1, y = PC2, color = Group, label = ID)) +
+fpca_score_plot <- ggplot(pca_df, aes(x = PC1, y = PC2, color = Group, label = ID)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
   geom_point(size = 4, alpha = 0.9) +
@@ -339,6 +381,13 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = Group, label = ID)) +
     legend.title = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
+fpca_score_plot
+
+# Exported for the memoria (ResearchProject_UCD/figures/fpca_scores.pdf).
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "fpca_scores.pdf"), fpca_score_plot,
+         width = 6.5, height = 4.5)
+}
 ```
 
 ::: {.callout-note collapse="true"}
@@ -538,7 +587,14 @@ histA <- ggplot(data.frame(p = pvalsA), aes(x = p)) +
   labs(title = "Asymptomatic (70 splits)", x = "p-value", y = "Frequency") +
   theme_classic(base_size = 13)
 
-histA + histS
+splithalf_hist_combined <- histA + histS
+splithalf_hist_combined
+
+# Exported for the memoria (ResearchProject_UCD/figures/splithalf_hist.pdf).
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "splithalf_hist.pdf"), splithalf_hist_combined,
+         width = 6.5, height = 4.5)
+}
 ```
 
 ::: {.callout-note collapse="true"}
