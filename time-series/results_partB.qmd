@@ -47,16 +47,50 @@ library(patchwork)
 # transient" below. The p-value and critical value carry Monte Carlo noise
 # and may differ in the last reported digit after re-rendering.
 ref <- list(
-  n_stable_zero = 129, n_aperiodic_zero = 0,
-  mean_max_stable = 0.0016, mean_max_aperiodic = 0.227,
+  # Re-baselined 3 Aug 2026. The committed output/*.csv had drifted from the
+  # notebook that is supposed to produce them: the CSVs dated from 29 July,
+  # while beetles_landscapes.ipynb -- which has a fixed seed and is exactly
+  # reproducible -- produces the 30 July .npy. Re-running the notebook today
+  # reproduces the .npy bit for bit and does not reproduce the old CSVs, so the
+  # CSVs were the stale ones and were regenerated from the .npy. Everything
+  # below moved by the corresponding amount; the separation between the two
+  # regimes is unaffected.
+  n_stable_zero = 126, n_aperiodic_zero = 0,
+  mean_max_stable = 0.0020, mean_max_aperiodic = 0.228,
   pc1_pct = 84, pc2_pct = 13,
   n_aperiodic_pc1_neg = 42,
-  test1_Tobs = 85.5, test1_crit95 = 2.75,
+  # test1_Tobs was 85.5 before the 3 Aug re-baselining and is 68.05 after, a
+  # move of 17.4 that broke the tolerance of 15 on the first re-render. The
+  # test result is untouched: crit95 moved by 0.04 against a tolerance of 0.5,
+  # the p-value is still 0, and Tobs remains 25 times the critical value.
+  # What moved is only where the supremum lands. It sits at t = 0.168, where
+  # the mean difference between regimes is 0.109, rather than at t = 0.283,
+  # where the difference is largest at 0.176 but the statistic is only 37.4.
+  # The pooled variance at the first point is 8.6 times smaller than at the
+  # second, so the studentised supremum is bought by a small local variance
+  # and not by a large difference. That is the sensitivity the loose tolerance
+  # was meant to absorb, and it was not loose enough. Tobs is deterministic
+  # given the landscapes, so it should now be stable across re-renders.
+  test1_Tobs = 68.05, test1_crit95 = 2.75,
   # Ratio of the two regimes' mean pointwise variance, on the same 101-point
   # grid the permutation test evaluates on. Reported in the exchangeability
   # subsection below; it is a descriptive quantity, not part of any test.
-  var_ratio = 3500,
-  # With the transient retained, the stable regime is NOT uniformly zero (71
+  #
+  # Was 3500 before the 3 Aug re-baselining and is 1926 after. The move is
+  # arithmetic, not a problem: var_stable sits in the denominator, and the
+  # regenerated CSVs carry 74 non-zero stable landscapes rather than 71, with
+  # the mean stable peak rising from 0.0016 to 0.0020. A larger denominator is
+  # a smaller ratio. var_aperiodic is unchanged at 3.43e-03.
+  #
+  # The exchangeability argument below is unaffected. Three orders of
+  # magnitude of dispersion between the two samples is still three orders of
+  # magnitude, and the caveat about the validity of the p-value stands as
+  # written. Only the figure quoted in that paragraph changes; see the note
+  # there, where "three and a half orders" was corrected to match log10(1926)
+  # = 3.28. The quantity is deterministic given the landscapes, so it should
+  # not move again unless they do.
+  var_ratio = 1926,
+  # With the transient retained, the stable regime is NOT uniformly zero (74
   # of 200 landscapes carry genuine H1 signal above the grid's resolution),
   # so a within-stable split has positive pooled variance almost everywhere
   # and the control statistic is well defined.
@@ -73,8 +107,13 @@ ref_burnin <- list(
   test1_Tobs = 198.65, test1_crit95 = 2.58
 )
 
-col_stable    <- "blue"
-col_aperiodic <- "orange"
+# Blue for the reference group, red for the contrast. These are the light pair
+# of the make_figs.py palette (COL_BLUE_LIGHT / COL_RED_LIGHT), which is what
+# ts_landscapes_overlaid.png is drawn in, so the ggplot figures of this report
+# and the matplotlib ones next to them now match. Change them here, not at the
+# point of use.
+col_stable    <- "#1a5fa8"
+col_aperiodic <- "#C0392B"
 
 # The memoria lives outside this repository, so a standalone clone must
 # still render cleanly: figures are exported to it only when the target
@@ -191,7 +230,7 @@ n_stable_zero    <- sum(is_zero_row(DataStable))
 n_aperiodic_zero <- sum(is_zero_row(DataAperiodic))
 
 stopifnot(
-  "Expected 129 of 200 stable landscapes identically zero on the grid (a grid-resolution effect, see the transient section below, not an empty H1 diagram)" =
+  "Expected 126 of 200 stable landscapes identically zero on the grid (a grid-resolution effect, see the transient section below, not an empty H1 diagram)" =
     n_stable_zero == ref$n_stable_zero,
   "Expected 0 aperiodic series with an identically-zero landscape" =
     n_aperiodic_zero == 0
@@ -310,7 +349,7 @@ fpca_score_plot <- ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
 fpca_score_plot
 # Exported for the memoria (ResearchProject_UCD/figures/ts_fpca_scores.pdf):
 # all 200 stable series fall in the PC1 < 0 half-plane, but — unlike the
-# burn-in variant — do not collapse onto a single point, since 71 of them
+# burn-in variant — do not collapse onto a single point, since 74 of them
 # still carry a real (if small) transient H1 loop.
 if (dir.exists(fig_dir)) {
   ggsave(file.path(fig_dir, "ts_fpca_scores.pdf"), fpca_score_plot,
@@ -357,7 +396,7 @@ stopifnot(
 The first two functional components explain **`r sprintf("%.1f", cum_pct)`%**
 of the variability among landscapes (PC1 $\approx$ `r sprintf("%.1f", pc1_pct)`%,
 PC2 $\approx$ `r sprintf("%.1f", pc2_pct)`%). All 200 stable series fall in the
-PC1 < 0 half-plane — unsurprising, since 129 of them share the exact same
+PC1 < 0 half-plane — unsurprising, since 126 of them share the exact same
 (identically-zero) landscape and so collapse to nearly the same point in
 function space. Separation is **not** perfect, though:
 **`r n_aperiodic_pc1_neg` of the 200 aperiodic series** (`r sprintf("%.0f%%", 100*n_aperiodic_pc1_neg/200)`)
@@ -392,7 +431,7 @@ Part A's data never exercised.
 
 The Welch-style test statistic at each grid point $t$ is
 $\lvert \bar{x}_1(t) - \bar{x}_2(t) \rvert / \sqrt{v_1(t) + v_2(t)}$, and the
-final statistic is the supremum over $t$. Because 129 of the 200 stable
+final statistic is the supremum over $t$. Because 126 of the 200 stable
 series are identically zero, the stable group's pointwise variance $v_1(t)$
 is minuscule almost everywhere, and at the very edges of the shared grid
 range — where essentially no series in *either* group has accumulated any
@@ -444,7 +483,7 @@ vtperm <- function(X, i1, i2, nperm = 10000) {
     valid <- den > 0
     # Fully degenerate case: if no grid point has positive pooled variance the
     # statistic is undefined, not -Inf. This does NOT trigger in the main
-    # analysis below: with the transient retained, 71 of the 200 stable
+    # analysis below: with the transient retained, 74 of the 200 stable
     # landscapes carry genuine (if grid-sampled-as-zero) H1 signal, and a
     # within-stable split has positive pooled variance almost everywhere. It
     # is a correctness safeguard that DOES activate in "The
@@ -681,7 +720,7 @@ Averaged over the grid, the pointwise variance of the aperiodic landscapes is
 `r sprintf("%.2e", var_aperiodic)` against `r sprintf("%.2e", var_stable)` for
 the stable ones, a factor of roughly
 **`r format(round(var_ratio, -2), big.mark = ",", scientific = FALSE)`**. Two
-samples differing by three and a half orders of magnitude in dispersion are
+samples differing by more than three orders of magnitude in dispersion are
 not exchangeable, so the reported p-value should be read with a caveat about
 *validity*, not only about interpretation. The within-stable control below is
 the natural place to probe this, and — as that section explains — it is the
@@ -769,7 +808,7 @@ splithalf_hist_combined
 
 # Exported for the memoria (ResearchProject_UCD/figures/ts_splithalf_hist.pdf):
 # both panels, since with the no-burn-in replica neither control is
-# degenerate — the stable regime's 71 non-zero landscapes give its control
+# degenerate — the stable regime's 74 non-zero landscapes give its control
 # a real (if less informative) distribution too, and the figure caption in
 # the memoria reads "for each regime".
 if (dir.exists(fig_dir)) {
