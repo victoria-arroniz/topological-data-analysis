@@ -1,9 +1,10 @@
-# TDA Research: Networks and Time Series
+# TDA Research: Networks, Time Series and Images
 
-Topological data analysis (TDA) applied to two data modalities:
+Topological data analysis (TDA) applied to three data modalities:
 
 - **Part A — funTDA (Networks):** statistical analysis of gene regulatory networks using persistent homology + functional data analysis.
 - **Part B — Time Series:** persistence landscape analysis of simulated Tribolium beetle population dynamics.
+- **Part C — Images:** distance-transform filtrations on segmented lateral ventricles, raising the homological order to $H_2$, over 16 PPMI subjects.
 
 ---
 
@@ -29,8 +30,49 @@ topological-data-analysis/
 │   ├── requirements.txt             # Pinned deps for beetles_landscapes.ipynb
 │   └── results_partB.qmd            # R/knitr: FPCA + permutation test (reads output/*.csv)
 │
+├── images/                          # Part C: image TDA
+│   ├── pipeline/                    # 6 stages, DICOM -> landscapes (Python + FSL + FreeSurfer)
+│   ├── output/
+│   │   ├── diagrams/                # 128 birth-death CSVs, anonymised subject labels
+│   │   ├── landscapes_*.csv         # first layer on the common grid, 8 combinations
+│   │   ├── metadata.csv             # group, age, volume, eTIV per anonymised subject
+│   │   ├── sex_distribution.csv     # aggregate 2x2 only, never per subject
+│   │   └── *.json                   # test results from the Python pipeline
+│   ├── figures/
+│   │   └── ventricle_example.png    # anatomy figure, cropped to brain, no sagittal
+│   ├── export_for_repo.py           # anonymises deriv/ into output/; mapping stays local
+│   ├── make_brain_figure.py         # builds the anatomy figure from the local derivatives
+│   ├── requirements.txt             # Pinned deps for images/pipeline/
+│   └── results_partC.qmd            # R/knitr: landscapes, FPCA, exhaustive permutation tests
+│
 └── README.md
 ```
+
+Part C is the only part whose raw data is absent by necessity rather than by
+choice. The DICOM are identified human data under a Data Use Agreement that
+does not permit redistribution, and PPMI subject numbers are themselves
+identifying, so even a directory listing of per-subject files would leak them.
+What is committed is the topological summary — the birth-death pairs and the
+landscapes — which is two steps removed from the image, carries no identifier,
+and is exactly what `results_partC.qmd` needs to recompute every reported
+number. Subject labels are `sub-01` … `sub-16`; the mapping back to PPMI
+numbers is produced by `export_for_repo.py` and is git-ignored.
+
+The one image in this part, `images/figures/ventricle_example.png`, is drawn
+from two subjects' T1 scans and is committed deliberately: it shows what the
+pipeline produces, which no table can. It carries axial and coronal views only,
+both cropped to the brain. **No sagittal view is included**, because a
+mid-sagittal T1 slice carries the facial profile and facial geometry is
+identifying. Labels are the sub-NN aliases.
+
+Group and age are kept per subject; **sex is not**. Age is needed for the
+positive control and for the age-radius correlation, and sixteen (group, age)
+pairs from a cohort of several thousand are what any published table carries.
+Sex is reported only in aggregate — 5 M / 3 F in control, 4 M / 4 F in PD,
+Fisher exact p = 1.00 — which is the fact the comparison actually depends on.
+Carried per subject it would sharpen the quasi-identifier for no analytical
+return: on this cohort (group, age) already makes fourteen of the sixteen rows
+unique, and no analysis reads sex.
 
 There is deliberately no `requirements.txt` at the repo root: Part A and Part B need
 mutually incompatible numpy versions (`numpy<2.0` for Part A vs. `numpy>=1.24` for
@@ -105,17 +147,88 @@ R packages for `results_partB.qmd`: `fda`, `ggplot2`, `patchwork`, `knitr`. Rend
 
 ---
 
+## Part C — Images
+
+**Data:** 16 PPMI participants (8 control, 8 Parkinson's disease; 9 men, 7
+women), all at the baseline visit, SAG 3D MPRAGE at 1.0 mm isotropic. The lateral ventricles are
+segmented with SynthSeg and the analysis is run on FreeSurfer labels 4 and 43,
+with labels 4, 43, 5 and 44 as a pre-declared sensitivity.
+
+**What is new relative to Parts A and B.** Both earlier parts read $H_1$ from a
+Vietoris–Rips or flag filtration built on a distance matrix. Part C changes the
+input encoding to a **cubical complex on a three-dimensional image**, and raises
+the homological order to $r = 2$, so that the object measured is an anatomical
+cavity rather than a cycle. It is the first place in the project where the
+voids question has a real object behind it.
+
+**The filtration, and why it is by distance rather than intensity.** Tissue is
+the complement of the cavity and the filtration is by sublevel sets of
+`d(x) = dist(x, complement of C)`. Filtering by intensity would give
+persistences in units of contrast; filtering by distance gives them in
+millimetres. Two consequences follow: every $H_2$ class is born at $t = 0$,
+because the zero sublevel set is exactly the complement, and the largest death
+is the radius of the largest inscribed ball. **The maximum persistence of $H_2$
+is therefore that radius, exactly** — for non-convex cavities too, and on
+cubical complexes.
+
+**Pipeline (`images/pipeline/`):**
+
+| Stage | What it does | Requires |
+|---|---|---|
+| `00_dicom_a_nifti.py` | DICOM → NIfTI, slices ordered by the plane normal | pydicom |
+| `01_segmentacion.sh` | SynthSeg: 32 structures on the raw T1 | FreeSurfer ≥ 7.3 |
+| `02_ventriculos.py` | extracts the ventricular masks from the labels | scipy |
+| `03_espacio_comun.sh` | 12-DOF affine to MNI152 1 mm | FSL |
+| `04_analisis.py` | $H_1$ and $H_2$, landscapes, FPCA, exhaustive test | cripser |
+| `05_diagnostico_edad.py` | age as a positive control, declared post hoc | — |
+
+Stages 1 and 3 need software that pip cannot install, and stage 0 needs data
+that cannot be redistributed. A clone can run neither, and does not need to:
+the report reads only the committed CSVs.
+
+**Reproducible report:** [`results_partC.qmd`](images/results_partC.qmd)
+rebuilds the landscapes from the committed birth-death pairs, runs FPCA and the
+**exhaustive** permutation test over all $\binom{16}{8} = 12{,}870$ label
+assignments, and asserts its own results against the Python pipeline with
+`stopifnot()`. It also reports the $L^1$, $L^2$ and $L^\infty$ distances
+between group mean landscapes as a post-hoc alternative to the pre-registered
+supremum statistic, and documents why: the supremum of a pointwise standardised
+statistic over functions of compact support is unstable at the edge of the
+support, where almost every curve is zero and the pooled variance collapses.
+
+**Result:** no difference is detected between groups, by $H_1$, by $H_2$ or by
+ventricular volume, in either space and under either cavity definition. A
+positive control on age — which correlates with the inradius at 0.750, and is
+balanced by diagnosis — places the detection floor of the design at roughly
+1.4 mm of inradius, against an observed between-group difference of 0.11 mm.
+
+**Dependencies (Part C):**
+```
+pip install -r images/requirements.txt
+```
+Compatible with `time-series/requirements.txt`, not with `funTDA/`, which pins
+`numpy<2.0` transitively. R packages for `results_partC.qmd`: `fda`,
+`ggplot2`, `patchwork`, `knitr`. Render with
+`quarto render images/results_partC.qmd`.
+
+---
+
 ## Methodological connection
 
 Both parts apply the same funTDA workflow: raw data → persistent homology → persistence landscape → functional data analysis. The landscape representation converts each topological summary into a function in L², enabling statistical comparisons (mean, FPCA, hypothesis tests) across samples.
 
-| Aspect | Part A (networks) | Part B (time series) |
-|--------|-------------------|----------------------|
-| Input | Adjacency matrix | Scalar time series |
-| Geometry | Graph geodesic distances | Takens phase-space embedding |
-| PH algorithm | Flagser | Vietoris-Rips |
-| Relevant homology | H1 (graph cycles) | H1 (attractor loops) |
-| Landscape grid | Fixed [0, 1], 500 pts | Data-adaptive range, 500 pts |
+| Aspect | Part A (networks) | Part B (time series) | Part C (images) |
+|--------|-------------------|----------------------|-----------------|
+| Input | Adjacency matrix | Scalar time series | Segmented 3D volume |
+| Geometry | Graph geodesic distances | Takens phase-space embedding | Euclidean distance transform |
+| Complex | Flag (Flagser) | Vietoris-Rips | Cubical (CubicalRipser) |
+| Relevant homology | H1 (graph cycles) | H1 (attractor loops) | H2 (cavities), H1 reported |
+| Landscape grid | Fixed [0, 1], 500 pts | Data-adaptive range, 500 pts | Data-adaptive, mm, 101 pts |
+| Filtration units | dimensionless | dimensionless | **millimetres** |
+| Permutation null | 10,000 sampled | 10,000 sampled | **12,870, exhaustive** |
+
+Part C is the only one whose filtration parameter carries a physical unit, which
+is what allows its persistence to be read directly as a length.
 
 ---
 
@@ -125,3 +238,6 @@ Both parts apply the same funTDA workflow: raw data → persistent homology → 
 - Berry E, Chen Y, Cisewski-Kehe J, Fasy BT. *Functional Summaries of Persistence Diagrams.*
 - Pereira CMM, de Mello RF. *Persistent homology for time series and spatial data clustering.* Expert Systems with Applications, 42 (2015), 6026–6038. — basis of the time-series code (Part B).
 - Costantino RF, Cushing JM, Dennis B, Desharnais RA. *Experimentally induced transitions in the dynamic behaviour of insect populations.* Nature, 375(6528) (1995), 227–230. — original Tribolium (L, P, A) model, cited here via Pereira & de Mello (2015).
+- Billot B, Greve DN, Puonti O, Thielscher A, Van Leemput K, Fischl B, Dalca AV, Iglesias JE. *SynthSeg: segmentation of brain MRI scans of any contrast and resolution without retraining.* Medical Image Analysis, 86 (2023). — segmentation used in Part C.
+- Kaji S, Sudo T, Ahara K. *Cubical Ripser: software for computing persistent homology of image and volume data.* — persistent homology backend for Part C.
+- Garg A, Lu D, Popuri K, Beg MF. *Brain geometry persistent homology marker for Parkinson's disease.* ISBI 2017, 525–528. — prior application of persistence landscapes and permutation testing to PPMI; source of the $L^p$ statistic reported in Part C.

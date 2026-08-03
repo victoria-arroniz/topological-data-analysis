@@ -1,0 +1,14 @@
+# Dependencies for make_figs.py, the script at the repository root that builds
+# the shared figures: the two PNGs embedded in results_partB.qmd and the two
+# exported to the memoria.
+#
+# Kept separate from funTDA/requirements.txt and time-series/requirements.txt
+# because those pin the persistent-homology stacks (giotto-tda, ripser), which
+# conflict with each other on numpy. This script computes no homology; it only
+# draws what the other two produced, so it needs neither.
+#
+# Install with: pip install -r requirements.txt
+
+matplotlib>=3.7
+networkx>=3.0
+numpy>=1.24

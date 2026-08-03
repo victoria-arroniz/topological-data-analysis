@@ -1,0 +1,27 @@
+# Python dependencies for Part C (images/pipeline/).
+# Install with: pip install -r images/requirements.txt
+#
+# Compatible with time-series/requirements.txt (numpy>=1.24) and NOT with
+# funTDA/requirements.txt, which pins numpy<2.0 transitively through
+# scikit-learn. Install Part A in its own environment.
+
+numpy>=1.24
+scipy>=1.11        # distance transform, connected components, B-spline basis
+nibabel>=5.0       # NIfTI reading and writing
+pydicom>=2.4       # DICOM reading, stage 0 only
+cripser>=0.0.30    # CubicalRipser: persistent homology of cubical complexes
+matplotlib>=3.7    # quality-control figures
+scikit-image>=0.22 # marching cubes, for the 3D cavity rendering only
+
+# NOT installable with pip, and required by stages 1 and 3:
+#
+#   FreeSurfer >= 7.3   provides mri_synthseg (stage 1). A free licence is
+#                       required: https://surfer.nmr.mgh.harvard.edu/registration.html
+#                       On Apple Silicon, 8.0.0 has a known mri_synthseg bug;
+#                       use 7.4.1 or export FS_V8_XOPTS=0.
+#   FSL       >= 6.0    provides flirt and fslmaths (stage 3).
+#
+# Stages 2, 4 and 5 are pure Python and run without either. Since the DICOM
+# cannot be redistributed, a clone of this repository can only run stages 4
+# and 5 — and does not need to: results_partC.qmd recomputes every reported
+# number from the committed CSVs in images/output/.
