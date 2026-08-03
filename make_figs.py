@@ -9,6 +9,28 @@ import shutil
 import networkx as nx
 from pathlib import Path
 
+# ---------------------------------------------------------------------------
+# Palette
+# ---------------------------------------------------------------------------
+# Blue for the reference group, red for the contrast. The three Quarto reports
+# use the light pair below verbatim (COL_BLUE_LIGHT / COL_RED_LIGHT); they used
+# to use the base R names "blue" and "red", which are pure primaries and read
+# as harsh next to these figures.
+#
+# Three shades of each rather than one: the figures below are drawn at
+# different line densities, and a single saturated pair reads badly where forty
+# curves overlap. The shades pair up, dark with dark and light with light, so
+# any two figures placed side by side stay consistent.
+#
+# This replaces six hard-coded hex codes scattered across the file, which had
+# already drifted: the second group was drawn in a dark red in one figure and
+# in orange in two others.
+COL_BLUE_DARK  = '#16336E'
+COL_BLUE_MID   = '#1A3A7A'
+COL_BLUE_LIGHT = '#1a5fa8'
+COL_RED_DARK   = '#8B1A26'
+COL_RED_MID    = '#A01828'
+COL_RED_LIGHT  = '#C0392B'
 ROOT = Path(__file__).resolve().parent
 FIGURES_DIR = ROOT / 'figures'
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
@@ -54,14 +76,14 @@ symp_ls  = [landscape_k1(h1, tseq) for h1 in symp_h1]
 fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
 
 for ls in asymp_ls:
-    axes[0].plot(tseq, ls, color='#1A3A7A', alpha=0.55, linewidth=0.9)
+    axes[0].plot(tseq, ls, color=COL_BLUE_MID, alpha=0.55, linewidth=0.9)
 axes[0].set_title(f'Asymptomatic (n={len(asymp_ls)})')
 axes[0].set_xlabel('Filtration value')
 axes[0].set_ylabel('λ₁(t)')
 axes[0].grid(True, alpha=0.3)
 
 for ls in symp_ls:
-    axes[1].plot(tseq, ls, color='#A01828', alpha=0.55, linewidth=0.9)
+    axes[1].plot(tseq, ls, color=COL_RED_MID, alpha=0.55, linewidth=0.9)
 axes[1].set_title(f'Symptomatic (n={len(symp_ls)})')
 axes[1].set_xlabel('Filtration value')
 axes[1].grid(True, alpha=0.3)
@@ -100,14 +122,14 @@ ls_s1   = landscape_k1(h1_s1, tseq_s)
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
-nx.draw_networkx_nodes(G, pos, ax=axes[0], node_size=25, node_color='#1A3A7A', alpha=0.8)
+nx.draw_networkx_nodes(G, pos, ax=axes[0], node_size=25, node_color=COL_BLUE_MID, alpha=0.8)
 nx.draw_networkx_edges(G, pos, ax=axes[0], alpha=0.3,
-                       width=[0.4 + 1.2 * w for w in ew_norm], edge_color='#1A3A7A')
+                       width=[0.4 + 1.2 * w for w in ew_norm], edge_color=COL_BLUE_MID)
 axes[0].set_title('H3N2 GRN — Symptomatic 1\n60-node subgraph, edges > 85th pct', fontsize=10)
 axes[0].axis('off')
 
-axes[1].fill_between(tseq_s, ls_s1, alpha=0.15, color='#A01828')
-axes[1].plot(tseq_s, ls_s1, color='#A01828', linewidth=2)
+axes[1].fill_between(tseq_s, ls_s1, alpha=0.15, color=COL_RED_MID)
+axes[1].plot(tseq_s, ls_s1, color=COL_RED_MID, linewidth=2)
 axes[1].set_xlabel('Filtration value')
 axes[1].set_ylabel('λ₁(t)')
 axes[1].set_title('H1 persistence landscape\n(Symptomatic 1)', fontsize=10)
@@ -120,13 +142,13 @@ print('figures/network_to_landscape.png saved')
 
 # ─── Figure 3: timeseries_to_landscape.png ────────────────────────────────────
 
-def simulate_beetles(u_a, n=200, B=7.48, c_ea=0.009, c_pa=0.004, c_el=0.012, u_l=0.267):
+def simulate_beetles(mu_a, n=200, B=7.48, c_ea=0.009, c_pa=0.004, c_el=0.012, mu_l=0.267):
     L, P, A = 10.0, 5.0, 50.0
     series = [A]
     for _ in range(n - 1):
         L_new = B * A * np.exp(-c_el * L - c_ea * A)
-        P_new = L * (1 - u_l)
-        A_new = P * np.exp(-c_pa * A) + A * (1 - u_a)
+        P_new = L * (1 - mu_l)
+        A_new = P * np.exp(-c_pa * A) + A * (1 - mu_a)
         L, P, A = L_new, P_new, A_new
         series.append(A)
     return np.array(series)
@@ -145,14 +167,14 @@ tseq_ts          = np.loadtxt(ts_output_dir / 'tseq.csv', delimiter=',')
 fig, axes = plt.subplots(2, 2, figsize=(12, 7))
 
 t_ax = np.arange(80)
-axes[0, 0].plot(t_ax, stable_ts[:80], color='#1a5fa8', linewidth=1.8)
-axes[0, 0].set_title('Stable regime (u_a = 0.73)')
+axes[0, 0].plot(t_ax, stable_ts[:80], color=COL_BLUE_LIGHT, linewidth=1.8)
+axes[0, 0].set_title('Stable regime (μ_a = 0.73)')
 axes[0, 0].set_xlabel('Time step')
 axes[0, 0].set_ylabel('Adult population (A)')
 axes[0, 0].grid(True, alpha=0.3)
 
-axes[1, 0].plot(t_ax, aperiodic_ts[:80], color='darkorange', linewidth=1.8)
-axes[1, 0].set_title('Aperiodic regime (u_a = 0.96)')
+axes[1, 0].plot(t_ax, aperiodic_ts[:80], color=COL_RED_LIGHT, linewidth=1.8)
+axes[1, 0].set_title('Aperiodic regime (μ_a = 0.96)')
 axes[1, 0].set_xlabel('Time step')
 axes[1, 0].set_ylabel('Adult population (A)')
 axes[1, 0].grid(True, alpha=0.3)
@@ -163,10 +185,10 @@ axes[1, 0].grid(True, alpha=0.3)
 # loop, as in the heritage no-burn-in run), so a shared axis would flatten
 # it to nothing. zero_safe_ylim falls back to a small fixed range only in
 # the exactly-zero case; the text label reports whichever is true.
-# Colors (#1a5fa8 / darkorange) match ts_individual_landscapes.png and the
-# rest of the notebook-generated figures, for visual consistency.
+# Colours are the light pair of the palette above, shared with the three Quarto
+# reports so that the matplotlib and ggplot figures of this project match.
 for i in range(40):
-    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color='#1a5fa8', alpha=0.55, linewidth=1.1)
+    axes[0, 1].plot(tseq_ts, stable_ls_all[i], color=COL_BLUE_LIGHT, alpha=0.55, linewidth=1.1)
 stable_peak_40 = stable_ls_all[:40].max()
 axes[0, 1].set_title('H1 landscapes — Stable' + ('  (identically zero)' if stable_peak_40 == 0 else ''))
 axes[0, 1].set_xlabel('Filtration value')
@@ -176,10 +198,10 @@ axes[0, 1].grid(True, alpha=0.3)
 stable_label_40 = 'identically zero' if stable_peak_40 == 0 else f'peak ≈ {stable_peak_40:.2f}'
 axes[0, 1].text(0.97, 0.92, stable_label_40,
                 transform=axes[0, 1].transAxes, ha='right', va='top',
-                fontsize=9, color='#1a5fa8')
+                fontsize=9, color=COL_BLUE_LIGHT)
 
 for i in range(40):
-    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color='darkorange', alpha=0.55, linewidth=1.1)
+    axes[1, 1].plot(tseq_ts, aperiodic_ls_all[i], color=COL_RED_LIGHT, alpha=0.55, linewidth=1.1)
 axes[1, 1].set_title('H1 landscapes — Aperiodic')
 axes[1, 1].set_xlabel('Filtration value')
 axes[1, 1].set_ylabel('λ₁(t)')
@@ -187,7 +209,7 @@ axes[1, 1].set_ylim(0, aperiodic_ls_all[:40].max() * 1.10)
 axes[1, 1].grid(True, alpha=0.3)
 axes[1, 1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:40].max():.2f}',
                 transform=axes[1, 1].transAxes, ha='right', va='top',
-                fontsize=9, color='darkorange')
+                fontsize=9, color=COL_RED_LIGHT)
 
 plt.tight_layout()
 plt.savefig(FIGURES_DIR / 'timeseries_to_landscape.png', dpi=200, bbox_inches='tight')
@@ -203,14 +225,14 @@ print('figures/timeseries_to_landscape.png saved')
 # before it settles is exactly what the text discusses, so it must stay visible.
 fig, axes = plt.subplots(2, 1, figsize=(7, 6))
 
-axes[0].plot(t_ax, stable_ts[:80], color='#1a5fa8', linewidth=1.8)
-axes[0].set_title('Stable regime (u_a = 0.73)')
+axes[0].plot(t_ax, stable_ts[:80], color=COL_BLUE_LIGHT, linewidth=1.8)
+axes[0].set_title('Stable regime (μ_a = 0.73)')
 axes[0].set_xlabel('Time step')
 axes[0].set_ylabel('Adult population (A)')
 axes[0].grid(True, alpha=0.3)
 
-axes[1].plot(t_ax, aperiodic_ts[:80], color='darkorange', linewidth=1.8)
-axes[1].set_title('Aperiodic regime (u_a = 0.96)')
+axes[1].plot(t_ax, aperiodic_ts[:80], color=COL_RED_LIGHT, linewidth=1.8)
+axes[1].set_title('Aperiodic regime (μ_a = 0.96)')
 axes[1].set_xlabel('Time step')
 axes[1].set_ylabel('Adult population (A)')
 axes[1].grid(True, alpha=0.3)
@@ -230,8 +252,8 @@ print('figures/timeseries_regimes.png saved')
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 
 for i in range(50):
-    axes[0].plot(tseq_ts, stable_ls_all[i], color='#16336E', alpha=0.6, linewidth=1.2)
-axes[0].set_title('Stable', color='#16336E', fontsize=13, fontweight='bold')
+    axes[0].plot(tseq_ts, stable_ls_all[i], color=COL_BLUE_DARK, alpha=0.6, linewidth=1.2)
+axes[0].set_title('Stable', color=COL_BLUE_DARK, fontsize=13, fontweight='bold')
 axes[0].set_xlabel('Filtration value')
 axes[0].set_ylabel('λ₁(t)')
 stable_peak_50 = stable_ls_all[:50].max()
@@ -239,17 +261,17 @@ axes[0].set_ylim(*zero_safe_ylim(stable_peak_50))
 axes[0].grid(True, alpha=0.3)
 stable_label_50 = 'identically zero' if stable_peak_50 == 0 else f'peak ≈ {stable_peak_50:.2f}'
 axes[0].text(0.97, 0.92, stable_label_50,
-             transform=axes[0].transAxes, ha='right', va='top', fontsize=10, color='#16336E')
+             transform=axes[0].transAxes, ha='right', va='top', fontsize=10, color=COL_BLUE_DARK)
 
 for i in range(50):
-    axes[1].plot(tseq_ts, aperiodic_ls_all[i], color='#C85A12', alpha=0.6, linewidth=1.2)
-axes[1].set_title('Aperiodic', color='#C85A12', fontsize=13, fontweight='bold')
+    axes[1].plot(tseq_ts, aperiodic_ls_all[i], color=COL_RED_DARK, alpha=0.6, linewidth=1.2)
+axes[1].set_title('Aperiodic', color=COL_RED_DARK, fontsize=13, fontweight='bold')
 axes[1].set_xlabel('Filtration value')
 axes[1].set_ylabel('λ₁(t)')
 axes[1].set_ylim(0, aperiodic_ls_all[:50].max() * 1.10)
 axes[1].grid(True, alpha=0.3)
 axes[1].text(0.97, 0.92, f'peak ≈ {aperiodic_ls_all[:50].max():.2f}',
-             transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color='#C85A12')
+             transform=axes[1].transAxes, ha='right', va='top', fontsize=10, color=COL_RED_DARK)
 
 fig.suptitle(
     'H1 persistence landscapes — the stable regime is identically zero\n'
@@ -265,16 +287,16 @@ plt.close()
 print('figures/landscapes_individual_dark.png saved')
 
 # ─── Figure 4b: landscapes_overlaid.png (both regimes, same axis) ──────────────
-# Colors (#1a5fa8 / darkorange) match ts_individual_landscapes.png and the
-# rest of the notebook-generated figures, for visual consistency.
+# Colours are the light pair of the palette above, shared with the three Quarto
+# reports so that the matplotlib and ggplot figures of this project match.
 fig, ax = plt.subplots(figsize=(10, 4.2))
 for i in range(50):
-    ax.plot(tseq_ts, aperiodic_ls_all[i], color='darkorange', alpha=0.45, linewidth=1.1, zorder=1)
+    ax.plot(tseq_ts, aperiodic_ls_all[i], color=COL_RED_LIGHT, alpha=0.45, linewidth=1.1, zorder=1)
 for i in range(50):
-    ax.plot(tseq_ts, stable_ls_all[i], color='#1a5fa8', alpha=0.85, linewidth=1.3, zorder=2)
+    ax.plot(tseq_ts, stable_ls_all[i], color=COL_BLUE_LIGHT, alpha=0.85, linewidth=1.3, zorder=2)
 handles = [
-    Line2D([0], [0], color='#1a5fa8', linewidth=2.5, label='Stable'),
-    Line2D([0], [0], color='darkorange', linewidth=2.5, label='Aperiodic'),
+    Line2D([0], [0], color=COL_BLUE_LIGHT, linewidth=2.5, label='Stable'),
+    Line2D([0], [0], color=COL_RED_LIGHT, linewidth=2.5, label='Aperiodic'),
 ]
 ax.legend(handles=handles, fontsize=12, loc='upper right')
 ax.set_xlabel('Filtration value')
@@ -286,20 +308,49 @@ plt.savefig(FIGURES_DIR / 'landscapes_overlaid.png', dpi=200, bbox_inches='tight
 plt.close()
 print('figures/landscapes_overlaid.png saved')
 
-# ─── Copy to the memoria, if present ───────────────────────────────────────────
+# ─── Distribute the figures to everything that consumes them ──────────────────
 
-# The memoria lives outside this repository, so a standalone clone must still
-# run this script cleanly. The previous approach (copying by hand after each
-# regeneration) silently went stale once ResearchProject_UCD/figures/ was
-# renamed from TFM_UCD/figures/, and nobody noticed until the figures were
-# checked against dates. Failing loudly here instead of copying by hand.
-thesis_figs = ROOT.parent / 'ResearchProject_UCD' / 'figures'
-if thesis_figs.is_dir():
-    for src_name, dst_name in [
-        ('timeseries_regimes.png', 'ts_timeseries_regimes.png'),
+# Two consumers, and both used to be fed by hand.
+#
+# results_partB.qmd embeds two of these PNGs by bare filename, so Quarto
+# resolves them next to the .qmd rather than here. Copying them across after
+# each regeneration was a manual step nobody wrote down, and the copies in
+# time-series/ duly froze on 30 July while the originals moved on. Same failure
+# as the memoria's, which had already frozen once when TFM_UCD/figures/ was
+# renamed to ResearchProject_UCD/figures/.
+#
+# So: every consumer is listed here, and the copy is part of the run. If you
+# add a figure to a report, add it to this table -- do not copy it by hand.
+targets = [
+    # (source dir, destination, required, [(source name, name at destination), ...])
+    (FIGURES_DIR, ROOT / 'time-series', True, [
+        ('timeseries_to_landscape.png', 'timeseries_to_landscape.png'),
+        ('landscapes_overlaid.png',     'landscapes_overlaid.png'),
+    ]),
+    (FIGURES_DIR, ROOT.parent / 'ResearchProject_UCD' / 'figures', False, [
+        ('timeseries_regimes.png',  'ts_timeseries_regimes.png'),
         ('landscapes_overlaid.png', 'ts_landscapes_overlaid.png'),
-    ]:
-        shutil.copyfile(FIGURES_DIR / src_name, thesis_figs / dst_name)
-        print(f'copied {src_name} -> {thesis_figs / dst_name}')
-else:
-    print('thesis figures directory not found; skipping export')
+    ]),
+    # Part C's anatomy figure is the one image in the thesis that this script
+    # does not draw. It is rendered by images/make_brain_figure.py from DICOM
+    # that the repository cannot carry, so it is committed under
+    # images/figures/ and only copied here. It still goes through this table
+    # rather than by hand, for the reason the comment above gives.
+    (ROOT / 'images' / 'figures',
+     ROOT.parent / 'ResearchProject_UCD' / 'figures', False, [
+        ('ventricle_example.png', 'img_ventricles.png'),
+    ]),
+]
+
+for src_dir, dest, required, pairs in targets:
+    if not dest.is_dir():
+        # The memoria lives outside this repository, so a standalone clone must
+        # still run this script cleanly; time-series/ is part of the repository
+        # and its absence is a real error.
+        if required:
+            raise SystemExit(f'{dest} is missing: this is part of the repository')
+        print(f'{dest} not found; skipping export')
+        continue
+    for src_name, dst_name in pairs:
+        shutil.copyfile(src_dir / src_name, dest / dst_name)
+        print(f'copied {src_name} -> {dest / dst_name}')
