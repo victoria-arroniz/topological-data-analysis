@@ -482,9 +482,23 @@ vtperm <- function(X, i1, i2, nperm = 10000) {
 argvals <- seq(0, 1, length.out = 101)
 cache_file <- "../output/results_partA_permtest_cache.rds"
 
-if (file.exists(cache_file)) {
-  cached <- readRDS(cache_file)
-} else {
+# Cache keyed on a hash of its own input CSVs (same pattern as Part B's
+# run_permtest_suite): if the committed PH diagrams or adjacency matrices
+# ever change, the stored p-values would otherwise silently go stale and
+# asserts would pass against outdated numbers instead of catching the change.
+# method = "radix" sorts in the C locale whatever LC_COLLATE says. Plain sort()
+# is locale-dependent and orders Symptomaticadjmatrix1_PH.csv before
+# ...matrix10_PH.csv here, where the C locale does the opposite ("0" < "_").
+# The hash is a concatenation in file order, so without this it would differ
+# between machines, the cache would look invalid on any clone, and the report
+# would recompute 197 permutation tests to arrive at the same numbers.
+input_files <- sort(Sys.glob(c("../output/PH/*.csv", "../data/GRN_adjacency_matrices/*.csv")),
+                    method = "radix")
+input_hash  <- paste(unname(tools::md5sum(input_files)), collapse = "_")
+cached      <- if (file.exists(cache_file)) readRDS(cache_file) else NULL
+cache_valid <- !is.null(cached) && identical(cached$input_hash, input_hash)
+
+if (!cache_valid) {
   set.seed(123)
 
   # 1) Main test: Asymptomatic vs Symptomatic
@@ -515,7 +529,7 @@ if (file.exists(cache_file)) {
     pvalsA[i] <- vtperm(XAsymp, g1, g2, nperm = 10000)$pval
   }
 
-  cached <- list(test1 = test1, pvalsS = pvalsS, pvalsA = pvalsA)
+  cached <- list(input_hash = input_hash, test1 = test1, pvalsS = pvalsS, pvalsA = pvalsA)
   saveRDS(cached, cache_file)
 }
 
@@ -609,13 +623,30 @@ if (dir.exists(fig_dir)) {
 | Asymptomatic — sd p | `r sprintf("%.3f", ref$asymp_sd)` | `r sprintf("%.3f", sd(pvalsA))` |
 | Asymptomatic — % p < 0.05 | `r sprintf("%.1f%%", ref$asymp_frac05)` | `r sprintf("%.1f%%", mean(pvalsA < 0.05) * 100)` |
 
-These quantities are Monte Carlo estimates (`nperm = 10000` per split)
-aggregated over dozens of partitions, so variation of this kind is expected
-relative to the baseline even when reproducing the algorithm exactly — in
-fact, the main test above (computed with the same seed, in the same order)
-reproduces the reference p-value exactly, and `vtperm` was validated
-bit-for-bit against `tperm.fd`. That is why the tolerance here is looser than
-in the main test.
+The tolerance here is looser than in the main test, and it is worth being exact
+about why, because the obvious explanation does not survive arithmetic.
+
+These are Monte Carlo estimates (`nperm = 10000` per split), so some drift from
+the baseline is expected. The size of that drift can be measured rather than
+assumed, and this design measures it for free: the 70 asymptomatic splits are
+35 partitions drawn twice, each pair being the same partition with independent
+permutation draws, so the 35 within-pair differences **are** the Monte Carlo
+error. Their standard deviation is about 0.005, which puts a single p-value at
+roughly 0.004 and the mean of the 70 at roughly 0.0004.
+
+Against that, the symptomatic mean sits about 4 error units from the baseline
+and the asymptomatic mean about 21. The second is not Monte Carlo drift. With
+`set.seed(123)` the figure is reproducible run to run, so it is a systematic
+offset between this reimplementation and the baseline it is compared against,
+and its cause has not been identified.
+
+Nothing downstream depends on it. What the control has to show is that the mean
+p-value of within-group splits sits near 0.5, which it does under either number
+(0.498 and 0.490 recomputed, 0.496 and 0.481 in the baseline), and that the
+false-positive rate is near nominal, which it also does. The main test is a
+different matter and is held to a tolerance forty times tighter: it reproduces
+the reference p-value exactly, with the same seed and the same draw order, and
+`vtperm` was validated bit-for-bit against `tperm.fd`.
 
 ```{r splithalf-asserts}
 tol_mean <- 0.02
