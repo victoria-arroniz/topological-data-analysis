@@ -4,7 +4,14 @@ Cohort: **16 subjects, 8 Control and 8 PD**, SAG 3D MPRAGE, 1.0 mm isotropic,
 256×256×192, TR 2300 / TE 2.74 / TI 900 / FA 9. **All at the baseline visit.**
 Manifest: `T1_data_def/T1.csv`.
 
-Everything runs from `~/rp`, a space-free symlink to the working folder.
+Everything runs from `~/rp`, a space-free symlink to the working folder, because
+FSL does not accept paths with spaces.
+
+These scripts used to exist twice, byte for byte: once here and once in a
+`pipeline/` directory at the top of the working folder. Since 3 Aug 2026 there is
+one copy, this one, and the top-level `pipeline/` is a symlink to it. The usage
+lines below are unchanged and still work: `python3 pipeline/04_analisis.py` from
+`~/rp` resolves through the link. Edit the files here.
 
 ```
 ln -s "$HOME/Desktop/Research Project" "$HOME/rp"
@@ -21,18 +28,25 @@ cd "$HOME/rp"
 | `01_segmentacion.sh` | SynthSeg: 32 structures labelled on the raw T1 | FreeSurfer |
 | `02_ventriculos.py` | extracts the ventricular masks from the labels | automatic |
 | — | **visual review of all 16 masks** | manual |
-| `03_espacio_comun.sh` | registration to MNI152 1 mm | FSL · pending |
-| `04_analisis.py` | H₂, landscapes λ₁…λ₅, FPCA, exhaustive permutation test | pending |
+| `03_espacio_comun.sh` | registration to MNI152 1 mm, nearest-neighbour resampling of the masks | FSL |
+| `04_analisis.py` | H₂ and H₁, landscapes λ₁…λ₅, FPCA, exhaustive permutation test | automatic |
+| `05_diagnostico_edad.py` | the age contrast, declared post hoc | automatic |
 
 The step in bold is not optional. A mask is never accepted on the strength of
-its number alone.
+its number alone. All sixteen were reviewed and none was rejected.
+
+All five stages have been run. What a clone of this repository can reproduce is
+not the chain but the analysis: every stage reads the manifest at
+`T1_data_def/T1.csv` and the derivatives under `deriv/`, neither of which can be
+redistributed, so `results_partC.qmd` is the entry point instead. It recomputes
+every number of Chapter 5 from the committed CSVs under `images/output/`.
 
 ## What changed on 2 August 2026
 
-The earlier chain — BET, FAST, registration to MNI 2 mm to bring in the atlas
-ventricle mask, cropping, and largest connected component — is archived in
-`_archivo/scripts_fsl_antiguos/`. SynthSeg replaces it. The rationale and the
-formal declaration are in `PREREGISTRO_CAP5.md` section 8.
+The earlier chain (BET, FAST, registration to MNI 2 mm to bring in the atlas
+ventricle mask, cropping, and largest connected component) was retired on that
+date and is not part of this repository. SynthSeg replaces it. The rationale and
+the formal declaration are in `PREREGISTRO_CAP5.md` section 8.
 
 What this buys:
 
@@ -51,8 +65,8 @@ deriv/
 ├── 01_nifti/       converted volumes + geometry.csv
 ├── 05_synthseg/    <s>_seg.nii.gz, <s>_vol.csv, <s>_vent.nii.gz,
 │                   <s>_vent_con3.nii.gz, volumenes_ventriculos.csv
-├── 06_mni/         registration to MNI 1 mm       (pending)
-├── 07_tda/         diagrams, landscapes, test     (pending)
+├── 06_mni/         registration to MNI 1 mm
+├── 07_tda/         diagrams, landscapes, test
 └── qc/             quality-control figures
 ```
 
@@ -67,7 +81,9 @@ longer used.
 | 5 · 44 | left · right temporal horn |
 | 14 · 15 | third · fourth ventricle |
 
-The object of this chapter is the **lateral** ventricles: 4, 43, 5, 44.
+The object of this chapter is the body and atrium of the lateral ventricles,
+labels **4 and 43**. Labels 5 and 44 are the pre-declared sensitivity analysis;
+see the next section.
 
 ## What counts as "the cavity" — settled 2 August 2026
 

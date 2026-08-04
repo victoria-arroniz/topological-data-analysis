@@ -17,11 +17,26 @@ scikit-image>=0.22 # marching cubes, for the 3D cavity rendering only
 #
 #   FreeSurfer >= 7.3   provides mri_synthseg (stage 1). A free licence is
 #                       required: https://surfer.nmr.mgh.harvard.edu/registration.html
+#
+#                       The segmentations behind Chapter 5 were produced with
+#                       freesurfer-macOS-darwin_arm64-8.2.0-20260314-d932c45.
+#                       Recording it here because nothing else does: the stage
+#                       checks that mri_synthseg exists and that a licence is
+#                       present, but writes no version stamp, so the build that
+#                       produced deriv/05_synthseg/ is not otherwise recoverable.
+#
 #                       On Apple Silicon, 8.0.0 has a known mri_synthseg bug;
-#                       use 7.4.1 or export FS_V8_XOPTS=0.
+#                       use 7.4.1 or export FS_V8_XOPTS=0. The build above is
+#                       8.2.0, so the warning may no longer apply, but this
+#                       project has no evidence either way. What stands behind
+#                       the segmentations is the visual review of all sixteen,
+#                       not the version number.
 #   FSL       >= 6.0    provides flirt and fslmaths (stage 3).
 #
-# Stages 2, 4 and 5 are pure Python and run without either. Since the DICOM
-# cannot be redistributed, a clone of this repository can only run stages 4
-# and 5 — and does not need to: results_partC.qmd recomputes every reported
-# number from the committed CSVs in images/output/.
+# Stages 2, 4 and 5 are pure Python and run without either, but that is about
+# dependencies, not about data. A clone of this repository can run NONE of the
+# five: every stage, stage 4 and stage 5 included, reads the manifest at
+# T1_data_def/T1.csv and the derivatives under deriv/, and neither can be
+# redistributed. It does not need to. results_partC.qmd recomputes every
+# reported number from the committed CSVs in images/output/, which is what the
+# reproducibility claim of Chapter 5 rests on.
