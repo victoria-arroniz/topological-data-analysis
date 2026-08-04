@@ -113,3 +113,15 @@ images/subject_map.csv
 # FreeSurfer / FSL derivatives for Part C: several hundred MB of NIfTI, all
 # regenerable from the DICOM by images/pipeline/. Not versioned.
 images/deriv/
+
+# Belt and braces. Every rule above excludes imaging data by PATH, which only
+# works for the directories somebody thought of; deriv/ actually lives outside
+# this repository, so images/deriv/ above is defensive already. These exclude
+# by EXTENSION, so a stray volume dropped anywhere cannot be committed by
+# accident. Nothing legitimate in this repository is a NIfTI or a DICOM: what
+# Part C carries is the topological summary, which is CSV.
+*.nii
+*.nii.gz
+*.dcm
+*.DCM
+*.mgz
