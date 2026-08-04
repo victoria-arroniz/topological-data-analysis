@@ -42,6 +42,14 @@ col_pd      <- "#C0392B"
 col_younger <- "#1a5fa8"
 col_older   <- "#C0392B"
 
+# Fill for the permutation null in the perm-null figure. The null is not a
+# group, so strictly it should not take a colour from the pair above; it is a
+# pale tint of the reference blue, chosen light enough that the two markers
+# that DO carry group meaning read on top of it. Defined here, not at the
+# point of use, for the same reason as the pair above.
+col_null_fill <- "#cfe0f0"
+col_null_edge <- "#9dbdd8"
+
 # Figures the thesis consumes. Parts A and B already export this way; Part C
 # did not, so Chapter 5 had no figures with a producer and the only way to get
 # them into the memoria was a manual copy, which is exactly what broke three
@@ -104,11 +112,19 @@ landscape_layers <- function(dgm, tseq, K = K_LAYERS) {
 # design: a landscape is genuinely piecewise linear and its kinks carry the
 # individual birth-death pairs, so smoothing them away would distort the
 # object rather than denoise it.
-# The knots go AT THE GRID POINTS, which is what makes the representation
-# interpolating. Passing nbasis to create.bspline.basis instead would place
-# them equally spaced, and on this data that shifts the statistic by 0.02 --
-# small, but the point of a second-order basis with L = Q - 1 is precisely
-# that it reproduces the landscape exactly. The assertion below enforces it.
+# The knots go AT THE GRID POINTS, but not at all of them: L = Q - 1 leaves
+# the last two intervals spanned by a single basis function, so a kink at the
+# penultimate grid point cannot be reproduced. The representation is therefore
+# near-interpolating, not interpolating, and it is worth being exact about the
+# size of the gap. Measured over the eight combinations and all sixteen
+# subjects, the error is at rounding level in native H2 (2e-18) and reaches
+# 1.26e-02 mm in MNI H2; the unclamped fit dips to -6.3e-03 mm there, which a
+# landscape cannot do. None of that moves a reported number: T, the critical
+# value and p are unchanged to four decimals under an exactly interpolating
+# basis (L = Q), and unchanged again with no basis at all.
+# Passing nbasis to create.bspline.basis instead would place the knots equally
+# spaced, which does shift the statistic. The assertion below fixes the basis
+# size; the sanity check at the end measures the representation error.
 smooth_layers <- function(M, tseq) {
   Q <- length(tseq)
   brk <- tseq[c(seq_len(Q - 2L), Q)]          # 100 breakpoints -> nbasis = Q - 1
@@ -120,8 +136,8 @@ smooth_layers <- function(M, tseq) {
 
 # Landscape stack for one space x definition x homological order:
 # returns a 16 x (K * Q) matrix, one row per subject.
-build_stack <- function(space, definition, hom) {
-  dgms <- lapply(meta$subject, read_dgm, hom = hom,
+build_stack <- function(space, definition, hom, subjects = meta$subject) {
+  dgms <- lapply(subjects, read_dgm, hom = hom,
                  space = space, definition = definition)
   tmax <- max(vapply(dgms, function(d) if (nrow(d)) max(d[, 2]) else 0, 0))
   tseq <- seq(0, tmax, length.out = N_GRID)
@@ -205,8 +221,29 @@ perm_lp <- function(L, sel, dx, p) {
   Tn <- apply(COMBOS, 2, function(cc) {
     m <- rep(FALSE, 16); m[cc] <- TRUE; dist_of(m)
   })
-  list(stat = obs, p = mean(Tn >= obs - 1e-12))
+  # `null` is returned so that the distribution can be plotted. It does not
+  # depend on `sel`: Tn runs over every column of COMBOS, so the same null
+  # serves any contrast on these sixteen subjects. Only `obs` moves.
+  list(stat = obs, p = mean(Tn >= obs - 1e-12), null = Tn)
 }
+
+# knitr keys a cached chunk on that chunk's own code, and nothing else. The
+# chunks below call the functions defined above but do not contain them, so
+# editing one of these bodies leaves every cached chunk valid and the report
+# goes on displaying numbers computed with the previous version. That is not
+# hypothetical: it happened on 4 Aug, when `perm_lp` gained its `null` field
+# and `main-test` and `age-control` were served from cache regardless. It was
+# harmless then because the p-values did not move, which is exactly why it
+# would not have been noticed had they moved.
+#
+# Folding the function bodies into `cache.extra` puts them in the key, so a
+# change to any of the six forces a recompute. This is the Part C counterpart
+# of the `input_hash` guard that Parts A and B put on their .rds caches; note
+# that those hash the input CSVs and not the code, so the two mechanisms have
+# opposite blind spots and each needs its own guard.
+knitr::opts_chunk$set(cache.extra = vapply(
+  list(perm_lp, perm_sup, welch_sup, build_stack, landscape_layers, smooth_layers),
+  function(f) paste(deparse(f), collapse = ""), ""))
 ```
 
 ## What this document is
@@ -594,6 +631,67 @@ is the argument that no tuning is doing the work.
 $H_1$ does not show the age effect. The cavity picks up the change that is
 known to be there; the cycles do not.
 
+The two contrasts share a null. It is the set of $L^2$ distances obtained by
+relabelling the same sixteen subjects in all $\binom{16}{8} = 12{,}870$ ways,
+and it does not know which labelling is the real one; only the observed
+statistic does. Drawing both observed values against that single null puts the
+positive control and the clinical result on one axis.
+
+```{r perm-null}
+#| fig-cap: "Exact permutation null of the POST HOC $L^2$ statistic, not of the pre-registered supremum: native frame, main cavity definition, $H_2$. All 12,870 relabellings of the same sixteen subjects, with the age and diagnosis statistics marked. Dashed line: the 95th percentile of the null, above which a statistic attains $p \\le 0.05$."
+#| fig-width: 8
+#| fig-height: 4
+#| cache: true
+st_pn   <- stacks[["native_main_2"]]
+dx_pn   <- st_pn$tseq[2] - st_pn$tseq[1]
+lp_diag <- perm_lp(st_pn$L, is_ctrl,  dx_pn, 2)
+lp_age  <- perm_lp(st_pn$L, is_young, dx_pn, 2)
+
+# Both p-values must reproduce the tables above, and the two nulls must be the
+# same object. Selected by column rather than by row name: age_res takes its
+# row names from rbind, which the main table explicitly warns against trusting.
+pick_l2 <- function(d) d[d$space == "native" & d$definition == "main" &
+                         d$homology == 2L, "L2"]
+stopifnot(isTRUE(all.equal(lp_diag$null, lp_age$null)),
+          length(lp_diag$null) == 12870L,
+          abs(lp_diag$p - pick_l2(res))     < 1e-12,
+          abs(lp_age$p  - pick_l2(age_res)) < 1e-12)
+
+q95_pn   <- unname(quantile(lp_diag$null, 0.95))
+marks_pn <- data.frame(
+  stat  = c(lp_age$stat, lp_diag$stat),
+  label = c(sprintf("age, p = %.3f", lp_age$p),
+            sprintf("diagnosis, p = %.3f", lp_diag$p)),
+  stringsAsFactors = FALSE)
+marks_pn$label <- factor(marks_pn$label, levels = marks_pn$label)
+
+perm_null_plot <- ggplot(data.frame(stat = lp_diag$null), aes(x = stat)) +
+  geom_histogram(bins = 45, fill = col_null_fill, colour = col_null_edge,
+                 linewidth = 0.15) +
+  geom_vline(data = marks_pn, aes(xintercept = stat, colour = label),
+             linewidth = 0.9) +
+  # Drawn after the markers, so that it sits on top of them. The age statistic
+  # falls 0.0098 from this line on an axis 3.42 wide, which is what "sits at
+  # the five per cent boundary" means; if the dashed line were drawn first the
+  # blue marker would hide it and the figure would appear to show one line.
+  geom_vline(xintercept = q95_pn, linetype = "dashed", colour = "black",
+             linewidth = 0.5) +
+  annotate("text", x = q95_pn, y = Inf, label = "p = 0.05",
+           hjust = -0.12, vjust = 1.8, size = 3.2, colour = "black") +
+  scale_colour_manual(values = stats::setNames(c(col_younger, col_pd),
+                                               levels(marks_pn$label))) +
+  labs(x = expression(paste(L^2, " distance between group mean landscapes")),
+       y = "relabellings", colour = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom")
+perm_null_plot
+# Exported for the memoria (ResearchProject_UCD/figures/img_perm_null.pdf).
+if (dir.exists(fig_dir)) {
+  ggsave(file.path(fig_dir, "img_perm_null.pdf"), perm_null_plot,
+         width = 8, height = 4)
+}
+```
+
 ## Where the supremum falls
 
 ```{r sup-location}
@@ -626,6 +724,143 @@ pre-registered statistic is therefore reported unrestricted, and the $L^p$
 distances are reported beside it as the alternative that carries no free
 parameter. They agree on every contrast.
 
+## Provenance for the remaining figures quoted in Chapter 5
+
+Everything the chapter states that is not already produced above is produced
+here, so that no number in it rests on a calculation done once by hand.
+
+```{r chapter5-extras}
+#| cache: true
+
+# Components the full definition adds, and their inradii. Every H2 class of a
+# bounded component is born at t = 0 by Proposition prop:img-inradius (i), so
+# for these fragments the persistence IS the inradius.
+key_of <- function(M) paste(round(M[, 1], 9), round(M[, 2], 9))
+frag <- do.call(rbind, lapply(meta$subject, function(s) {
+  m <- read_dgm(s, 2L, "native", "main"); f <- read_dgm(s, 2L, "native", "full")
+  ex <- f[!(key_of(f) %in% key_of(m)), , drop = FALSE]
+  ex[ex[, 1] == 0, , drop = FALSE]
+}))
+cat(sprintf("Components added by the full definition: %d, inradii %.2f to %.2f mm, median %.2f\n",
+            nrow(frag), min(frag[, 2]), max(frag[, 2]), median(frag[, 2])))
+
+# One zero-birth bar per connected component, and the same component count in
+# the two frames -- which is what rules out the resampling to MNI fracturing
+# the mask.
+zero_births <- function(space) vapply(meta$subject, function(s)
+  sum(read_dgm(s, 2L, space, "main")[, 1] == 0), 0)
+zb_nat <- zero_births("native"); zb_mni <- zero_births("mni")
+n_bars_nat <- sum(vapply(meta$subject, function(s)
+  nrow(read_dgm(s, 2L, "native", "main")), 0))
+cat(sprintf("Bars born at t = 0, native main: %d of %d; equal to the component count in every subject: %s\n",
+            as.integer(sum(zb_nat)), as.integer(n_bars_nat),
+            all(zb_nat == meta$n_components)))
+cat(sprintf("Component counts agree between native and MNI: %s\n",
+            identical(unname(zb_nat), unname(zb_mni))))
+
+# The class that never dies is dropped upstream by a threshold of 1e5. This is
+# how far every legitimate bar sits from it.
+cat(sprintf("Largest finite death over the eight combinations: %.4f mm\n",
+            max(vapply(stacks, function(s) s$tmax, 0))))
+
+# Ties at the observed statistic, for both principal contrasts. Counting them
+# is what a randomisation test requires; discarding them would lower p.
+#
+# The tolerance is not a tuning parameter, but it cannot be at machine level
+# either. perm_sup() computes the observed value with a two-pass variance
+# (apply(., var)) and the null with the one-pass q - n m^2, uncentred; near the
+# peak of lambda_1 the sixteen curves are close together, so that difference
+# cancels badly and leaves the null carrying about 1e-9 of rounding noise that
+# the observed value does not. Exact equality is therefore the wrong test. The
+# right one is easy to calibrate: the nearest value that is NOT tied sits
+# 6e-4 away in the native contrast and 3.8e-4 in the MNI one, so every
+# tolerance between 1e-9 and 1e-4 returns the same count. None of this touches
+# p, which compares against a gap four orders larger than the noise.
+TIE_TOL <- 1e-6
+tie_table <- function(key) {
+  r <- perm_sup(stacks[[key]]$L, is_ctrl)
+  d <- sort(abs(r$null - r$T))
+  counts <- vapply(c(1e-12, 1e-9, 1e-6, 1e-4), function(tol) sum(d <= tol), 0L)
+  cat(sprintf("  %-16s T = %.6f   counts at 1e-12/1e-9/1e-6/1e-4: %s\n",
+              key, r$T, paste(counts, collapse = " / ")))
+  cat(sprintf("  %-16s ten smallest |null - T|: %s\n", "",
+              paste(sprintf("%.2e", d[1:10]), collapse = " ")))
+  c(ties = sum(d <= TIE_TOL), p = r$p,
+    p_no_ties = mean(abs(r$null - r$T) > TIE_TOL & r$null > r$T))
+}
+cat("Calibration of the tie count (the plateau across tolerances is the number):\n")
+tn <- tie_table("native_main_2"); tm <- tie_table("mni_main_2")
+cat(sprintf("Ties: native %d (p %.3f, %.3f discarding them), MNI %d (p %.3f, %.3f)\n",
+            as.integer(tn[["ties"]]), tn[["p"]], tn[["p_no_ties"]],
+            as.integer(tm[["ties"]]), tm[["p"]], tm[["p_no_ties"]]))
+
+# Whether the higher layers duplicate the first. The number of bars behind a
+# layer does not answer this; the correlation of its peak height with that of
+# lambda_1 across subjects does. A duplicate would correlate positively.
+peaks <- vapply(seq_len(K_LAYERS), function(k)
+  apply(stacks[["native_main_2"]]$L[, (k - 1L) * N_GRID + seq_len(N_GRID)],
+        1, max), numeric(16))
+cat("Correlation of each layer peak with the first:",
+    paste(sprintf("%+.2f", cor(peaks[, 1], peaks)), collapse = " "), "\n")
+
+# Age fitted jointly with group, against the subtraction quoted in the text,
+# and the balance of head size between the groups.
+anc <- coef(lm(r_nat ~ meta$age + I(!is_ctrl)))
+cat(sprintf("Group effect with age and group fitted jointly: %+.3f mm\n", anc[[3]]))
+cat(sprintf("eTIV Control %.1f mL vs PD %.1f mL, Welch p = %.3f\n",
+            mean(meta$eTIV_mL[is_ctrl]), mean(meta$eTIV_mL[!is_ctrl]),
+            t.test(meta$eTIV_mL[is_ctrl], meta$eTIV_mL[!is_ctrl])$p.value))
+
+# The fourteen-subject cohort. sub-05 and sub-14 are the two patients added
+# after the null result, per section 1b of the pre-registration; dropping them
+# leaves the eligible cohort of 8 control and 6 patients. The diagrams carry
+# the eTIV correction of the sixteen, which is a common factor and therefore
+# leaves T and p unchanged.
+ADDED <- c("sub-05", "sub-14")
+keep <- !(meta$subject %in% ADDED)
+C14 <- combn(14L, 8L)
+P14 <- matrix(0, ncol(C14), 14L)
+P14[cbind(rep(seq_len(ncol(C14)), each = 8L), as.vector(C14))] <- 1
+perm14 <- function(L, sel) {
+  active <- active_columns(L); obs <- welch_sup(L, sel, active)
+  L <- L[, active, drop = FALSE]; n1 <- 8L; n2 <- 6L
+  m1 <- (P14 %*% L) / n1; m2 <- ((1 - P14) %*% L) / n2
+  v  <- ((P14 %*% L^2) - n1 * m1^2) / (n1 - 1) / n1 +
+        (((1 - P14) %*% L^2) - n2 * m2^2) / (n2 - 1) / n2
+  z  <- ifelse(v > 0, abs(m1 - m2) / sqrt(ifelse(v > 0, v, 1)), 0)
+  mean(apply(z, 1, max) >= obs - 1e-12)
+}
+p14 <- c()
+for (sp in c("native", "mni")) for (df in c("main", "full")) for (h in c(1L, 2L)) {
+  s14 <- build_stack(sp, df, h, subjects = meta$subject[keep])
+  p14[paste(sp, df, h, sep = "_")] <- perm14(s14$L, is_ctrl[keep])
+}
+r14 <- r_nat[keep]
+cat(sprintf("n = 14: eight contrasts, lowest p = %.2f; inradius difference %+.2f mm against %+.2f with sixteen\n",
+            min(p14), mean(r14[!is_ctrl[keep]]) - mean(r14[is_ctrl[keep]]),
+            mean(r_nat[!is_ctrl]) - mean(r_nat[is_ctrl])))
+
+# Representation error of the basis, measured rather than assumed. Used by the
+# sanity check below.
+bspline_err <- max(vapply(names(stacks), function(k) {
+  s <- stacks[[k]]
+  max(vapply(s$dgms, function(d) {
+    raw <- landscape_layers(d, s$tseq)
+    max(abs(smooth_layers(raw, s$tseq) - raw))
+  }, 0))
+}, 0))
+cat(sprintf("Largest B-spline representation error over the eight combinations: %.4e mm\n",
+            bspline_err))
+
+stopifnot(
+  "fragment inradii out of tolerance"   = abs(median(frag[, 2]) - 1.75) < 0.05,
+  "zero-birth bars do not match components" = all(zb_nat == meta$n_components),
+  "component counts differ between frames"  = identical(unname(zb_nat), unname(zb_mni)),
+  "joint age-group effect out of tolerance" = abs(anc[[3]] + 0.218) < 5e-3,
+  "n = 14 is not null in all eight"     = min(p14) > 0.05
+)
+```
+
 ## Sanity checks
 
 ```{r checks}
@@ -637,8 +872,10 @@ L1raw <- landscape_layers(st$dgms[[1]], st$tseq)
 ok("landscape layers are non-negative", all(L1raw >= 0))
 ok("layers are ordered, lambda_1 >= lambda_2 >= ... >= lambda_K",
    all(apply(L1raw, 2, function(c) all(diff(c) <= 1e-12))))
-ok("the second-order basis reproduces the landscape to machine precision",
-   max(abs(smooth_layers(L1raw, st$tseq) - L1raw)) < 1e-8)
+ok(sprintf(paste("the second-order basis represents the landscape to within",
+                 "%.2e mm, over all eight combinations and all sixteen subjects"),
+           bspline_err),
+   bspline_err < 2e-2)
 ok("the basis has exactly L = Q - 1 functions",
    create.bspline.basis(breaks = st$tseq[c(seq_len(N_GRID - 2L), N_GRID)],
                         norder = 2L)$nbasis == N_GRID - 1L)
