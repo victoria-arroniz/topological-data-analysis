@@ -4,9 +4,9 @@
  Chapter 5 — Stage 5: age as a positive control.  DECLARED POST HOC
 ============================================================================
 
- This is NOT the pre-registered test. It was added after the null result of
- stage 4, and it is reported as a diagnostic, in the same spirit as the volume
- comparison of PREREGISTRO_CAP5.md section 5b.
+ This is NOT part of what was fixed in advance. It was added after the null
+ result of stage 4, and it is reported as a diagnostic throughout, in the same
+ spirit as the ventricular volume comparison.
 
  WHY IT IS WORTH RUNNING
  -----------------------

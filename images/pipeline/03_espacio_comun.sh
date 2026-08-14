@@ -5,11 +5,12 @@
 #
 #  WHY THIS STAGE EXISTS
 #  ---------------------
-#  The primary analysis is measured in MNI space (PREREGISTRO_CAP5.md section 3):
+#  The primary analysis is measured in MNI space:
 #  each brain is registered with a 12-DOF affine so that head size is normalised
 #  and the persistence of H2 comes out in millimetres of MNI. The native-space
 #  analysis is the sensitivity arm, and there head size is corrected with the
-#  eTIV instead (section 8.3).
+#  eTIV instead. Both arms were fixed before any group contrast was computed,
+#  and both are reported whatever they show.
 #
 #  The reference is the 1 mm template, not the 2 mm one: the quantity being
 #  measured is a radius in millimetres, and a 2 mm grid would impose a 2 mm

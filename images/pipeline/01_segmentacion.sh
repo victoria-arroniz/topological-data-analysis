@@ -5,8 +5,9 @@
 #
 #  Replaces the earlier chain (BET -> FAST -> registration to MNI 2 mm ->
 #  dilated atlas ventricle mask -> largest connected component), which is
-#  archived in _archivo/scripts_fsl_antiguos/. The rationale is in
-#  PREREGISTRO_CAP5.md section 8.
+#  archived in _archivo/scripts_fsl_antiguos/. The rationale is in ../README.md,
+#  under "What changed on 2 August 2026". The change was made before any
+#  contrast between the clinical groups had been computed.
 #
 #  WHAT IT DOES
 #    mri_synthseg labels 32 structures on the RAW T1. No skull stripping is

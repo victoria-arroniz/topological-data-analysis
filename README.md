@@ -155,7 +155,7 @@ R packages for `results_partB.qmd`: `fda`, `ggplot2`, `patchwork`, `knitr`. Rend
 **Data:** 16 PPMI participants (8 control, 8 Parkinson's disease; 9 men, 7
 women), all at the baseline visit, SAG 3D MPRAGE at 1.0 mm isotropic. The lateral ventricles are
 segmented with SynthSeg and the analysis is run on FreeSurfer labels 4 and 43,
-with labels 4, 43, 5 and 44 as a pre-declared sensitivity.
+with labels 4, 43, 5 and 44 as a sensitivity definition fixed in advance.
 
 **What is new relative to Parts A and B.** Both earlier parts read $H_1$ from a
 Vietoris–Rips or flag filtration built on a distance matrix. Part C changes the
@@ -194,8 +194,8 @@ rebuilds the landscapes from the committed birth-death pairs, runs FPCA and the
 **exhaustive** permutation test over all $\binom{16}{8} = 12{,}870$ label
 assignments, and asserts its own results against the Python pipeline with
 `stopifnot()`. It also reports the $L^1$, $L^2$ and $L^\infty$ distances
-between group mean landscapes as a post-hoc alternative to the pre-registered
-supremum statistic, and documents why: the supremum of a pointwise standardised
+between group mean landscapes as a post-hoc alternative to the supremum
+statistic fixed in advance, and documents why: the supremum of a pointwise standardised
 statistic over functions of compact support is unstable at the edge of the
 support, where almost every curve is zero and the pooled variance collapses.
 

@@ -45,8 +45,9 @@ every number of Chapter 5 from the committed CSVs under `images/output/`.
 
 The earlier chain (BET, FAST, registration to MNI 2 mm to bring in the atlas
 ventricle mask, cropping, and largest connected component) was retired on that
-date and is not part of this repository. SynthSeg replaces it. The rationale and
-the formal declaration are in `PREREGISTRO_CAP5.md` section 8.
+date and is not part of this repository. SynthSeg replaces it. The rationale is
+below, and the change was made before any contrast between the clinical groups
+had been computed.
 
 What this buys:
 
@@ -82,7 +83,8 @@ longer used.
 | 14 · 15 | third · fourth ventricle |
 
 The object of this chapter is the body and atrium of the lateral ventricles,
-labels **4 and 43**. Labels 5 and 44 are the pre-declared sensitivity analysis;
+labels **4 and 43**. Labels 5 and 44 are the sensitivity analysis, fixed in
+advance alongside the main definition;
 see the next section.
 
 ## What counts as "the cavity" — settled 2 August 2026
@@ -104,9 +106,9 @@ mask in all 16 subjects, so fragmentation stops being a factor.
 Left and right lateral ventricles fall in the **same** connected component under
 26-connectivity, joining near the foramina of Monro. Checked in all 16.
 
-A sensitivity analysis over the full definition (4, 43, 5, 44, all components) is
-pre-declared and will be reported alongside the main one. See
-`PREREGISTRO_CAP5.md` section 8.5.
+A sensitivity analysis over the full definition (4, 43, 5, 44, all components)
+was fixed in advance and is reported alongside the main one, whatever the two
+show.
 
 ## Checks the chain runs on itself
 

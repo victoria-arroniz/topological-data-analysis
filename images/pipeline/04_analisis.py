@@ -4,8 +4,8 @@
  Chapter 5 — Stage 4: persistent homology, landscapes, FPCA and the test
 ============================================================================
 
- THE FILTRATION  (PREREGISTRO_CAP5.md section 7.2)
- -------------------------------------------------
+ THE FILTRATION
+ --------------
  Tissue is defined as the COMPLEMENT of the cavity, and the filtration is by
  sublevel sets of
 
@@ -32,15 +32,16 @@
  LANDSCAPES AND THE STATISTIC  (sections 7.3 and 5)
  --------------------------------------------------
  K = 5 layers, evaluated on a common grid in millimetres, represented in the
- second-order B-spline basis of Definition def:bspline. Pre-registered statistic:
+ second-order B-spline basis of Definition def:bspline. The statistic, fixed
+ before any group contrast was computed:
 
      T = sup over k in 1..K and over the grid of
          |mean1 - mean2| / sqrt(var1/n1 + var2/n2)
 
  calibrated by the EXHAUSTIVE set of C(16,8) = 12870 label assignments.
 
- Reported alongside it, and DECLARED POST HOC in section 10.4 of the
- pre-registration, are the L1, L2 and L-infinity distances between the group
+ Reported alongside it, and DECLARED POST HOC because they were added once the
+ contrasts were in hand, are the L1, L2 and L-infinity distances between the group
  mean landscapes: the statistic of Garg et al. (2017), which carries no free
  parameter and is not subject to the edge-of-support pathology that the
  pointwise standardised supremum shows on these data.
@@ -67,7 +68,7 @@ MNI  = f"{BASE}/deriv/06_mni"
 OUT  = f"{BASE}/deriv/07_tda"
 os.makedirs(OUT, exist_ok=True)
 
-K_LAYERS = 5          # section 7.3
+K_LAYERS = 5          # fixed in advance; the reason is in the header
 N_GRID   = 101
 BIG      = 1e5        # cripser marks the essential class with DBL_MAX
 
@@ -181,7 +182,7 @@ def lp_test(L, sel, dx, p):
     """L^p distance between the group mean landscapes, calibrated by the same
     exhaustive permutation set. This is the statistic of Garg et al. (2017),
     who report p = 1, 2 and infinity. DECLARED POST HOC: it was added after
-    the pre-registered result, as a check on the pathology above.
+    the supremum result was in hand, as a check on the pathology above.
     """
     n, n1 = L.shape[0], int(sel.sum())
 
