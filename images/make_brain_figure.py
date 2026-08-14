@@ -106,10 +106,12 @@ for row, sid in enumerate(PAIR):
 
 fig.suptitle("Lateral ventricles segmented from T1 with SynthSeg, and the cavity they define",
              fontsize=13.5, y=0.965)
-fig.text(0.5, 0.015,
-         "Both subjects are controls. Red: FreeSurfer labels 4 and 43. Images are cropped to the brain and no "
-         "sagittal view is shown, because a mid-sagittal T1 slice carries the facial profile.",
-         ha="center", fontsize=10, color="#495057")
+# The in-image footer that used to sit here carried the caption text (labels 4
+# and 43, and why no sagittal view is drawn). It is gone so that one file serves
+# both consumers: results_partC.qmd supplies that text in its own caption, and
+# the thesis supplies it in the caption of fig:img-anatomy. The de-identification
+# reasoning itself is in the WHY THE SAGITTAL VIEW IS NOT INCLUDED section of the
+# docstring above, which is versioned and travels with this script.
 out = f"{HERE}/figures/ventricle_example.png"
 fig.savefig(out, dpi=140, facecolor="white", bbox_inches="tight")
 print(f"written to {out}")
