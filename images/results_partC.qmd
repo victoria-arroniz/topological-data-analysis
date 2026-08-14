@@ -510,7 +510,17 @@ if (dir.exists(fig_dir)) {
 }
 ```
 
-## The pre-registered test
+## The test, fixed in advance
+
+Everything in this section was settled before any contrast between the clinical
+groups was computed: the two cavity definitions, the two spatial frames, both
+homological orders, the five landscape layers, the statistic itself, and the
+exhaustive permutation scheme. Two things came later, once those contrasts were
+in hand, and both are identified where they appear: the $L^p$ distances reported
+beside the supremum, and the age control below. The working notes that record
+the order in which the decisions were taken are not part of this repository, so
+what is claimed here is that order and not a registration a reader could check
+against an external document.
 
 The statistic is the supremum, over the five landscape layers and over the
 grid, of the pointwise Welch statistic of Definition `def:functional-ttest`.
@@ -534,7 +544,7 @@ for (sp in c("native", "mni")) for (df in c("main", "full")) for (h in c(1L, 2L)
 res <- do.call(rbind, rows)
 rownames(res) <- res$key                      # never rely on rbind's row names
 knitr::kable(res[, -1], row.names = FALSE, digits = 4,
-             caption = "Pre-registered supremum statistic, and the post-hoc $L^p$ distances.")
+             caption = "Supremum statistic fixed in advance, and the post-hoc $L^p$ distances.")
 ```
 
 ```{r main-asserts}
@@ -542,16 +552,27 @@ knitr::kable(res[, -1], row.names = FALSE, digits = 4,
 pairs <- list(native_main_2 = ref$native_main_H2, native_main_1 = ref$native_main_H1,
               mni_main_2    = ref$mni_main_H2,    mni_main_1    = ref$mni_main_H1,
               native_full_2 = ref$native_full_H2, mni_full_2    = ref$mni_full_H2)
-cat("| combination | T (R) | T (Python) | dT | p (R) | p (Python) | dp |\n")
-cat("|---|---|---|---|---|---|---|\n")
+# crit95 is compared here as well as T and p. It was left out until 14 Aug 2026,
+# and that omission hid a real divergence: on mni_full_2 the two implementations
+# return 4.4840 (R) against 4.4762 (Python). T and p agree there to 1e-16, so a
+# check on those two alone reported "agreement" while a published number
+# differed in the third decimal. The cause is one column of the degenerate-column
+# mask, diagnosed in the chunk below.
+cat("| combination | T (R) | T (Python) | dT | crit95 (R) | crit95 (Python) | dcrit | p (R) | p (Python) | dp |\n")
+cat("|---|---|---|---|---|---|---|---|---|---|\n")
 worst <- 0; lines <- character(0)
 for (k in names(pairs)) {
   i <- match(k, res$key); r <- pairs[[k]]
-  worst <- max(worst, abs(res$T[i] - r$T), abs(res$p[i] - r$p))
-  cat(sprintf("| %s | %.4f | %.4f | %+.4f | %.4f | %.4f | %+.4f |\n",
-              k, res$T[i], r$T, res$T[i] - r$T, res$p[i], r$p, res$p[i] - r$p))
-  lines <- c(lines, sprintf("  %-15s T: R %8.4f  Py %8.4f  d %+9.2e | p: R %.4f  Py %.4f",
-                            k, res$T[i], r$T, res$T[i] - r$T, res$p[i], r$p))
+  worst <- max(worst, abs(res$T[i] - r$T), abs(res$p[i] - r$p),
+               abs(res$crit95[i] - r$crit))
+  cat(sprintf("| %s | %.4f | %.4f | %+.4f | %.4f | %.4f | %+.4f | %.4f | %.4f | %+.4f |\n",
+              k, res$T[i], r$T, res$T[i] - r$T,
+              res$crit95[i], r$crit, res$crit95[i] - r$crit,
+              res$p[i], r$p, res$p[i] - r$p))
+  lines <- c(lines, sprintf("  %-15s T: R %8.4f  Py %8.4f  d %+9.2e | crit: R %8.4f  Py %8.4f  d %+9.2e | p: R %.4f  Py %.4f",
+                            k, res$T[i], r$T, res$T[i] - r$T,
+                            res$crit95[i], r$crit, res$crit95[i] - r$crit,
+                            res$p[i], r$p))
 }
 cat(sprintf("\nLargest discrepancy between the two implementations: %.2e\n\n", worst))
 
@@ -567,7 +588,8 @@ if (worst >= 5e-3) {
   cat("\n::: {.callout-warning}\n## The two implementations disagree\n\n")
   cat(sprintf("The largest discrepancy is %.2e, above the 5e-3 tolerance. ", worst))
   cat("The R figures in the table above are the ones this document reports; ")
-  cat("the Python column is the reference from `images/pipeline/`.\n:::\n\n")
+  cat("the Python column is the reference from `images/pipeline/`. ")
+  cat("The table below locates the cause in the degenerate-column mask.\n:::\n\n")
 } else {
   cat("The two implementations agree to within 5e-3 on every checked value.\n\n")
 }
@@ -575,10 +597,38 @@ cat(sprintf("Smallest reachable p-value with this design: %.6f\n", ref$p_min))
 cat(sprintf("Smallest p-value observed across the eight contrasts: %.4f\n", min(res$p)))
 ```
 
+```{r mask-crossimpl}
+#| results: asis
+# Where the crit95 divergence above comes from. active_columns() and the Python
+# guard in pipeline/04_analisis.py implement the same criterion, but they do not
+# agree on how many columns survive it: on the two MNI H2 combinations R keeps
+# one column that Python drops. A column at the boundary of the variance
+# threshold is enough. It does not move T (the supremum is attained far from
+# it) and it does not move p, but it changes the null by one column and so can
+# move its 95th percentile, which is what happens on mni_full_2.
+#
+# The Python counts are read from output/resultados_test.json, field
+# active_columns, and are hard-coded here rather than parsed so that this
+# diagnostic still runs on a clone that has the CSVs but not the JSON.
+PY_COLS <- c(native_main_2 = 399L, native_main_1 = 386L,
+             mni_main_2    = 412L, mni_main_1    = 390L,
+             native_full_2 = 403L, mni_full_2    = 412L)
+cat("| combination | active columns (R) | active columns (Python) | difference |\n")
+cat("|---|---|---|---|\n")
+for (k in names(PY_COLS)) {
+  rc <- sum(active_columns(stacks[[k]]$L))
+  cat(sprintf("| %s | %d | %d | %+d |\n", k, rc, PY_COLS[[k]], rc - PY_COLS[[k]]))
+}
+cat("\nThe mask is computed from the pooled sample in both implementations, so it ")
+cat("is invariant under relabelling and neither version invalidates the test. ")
+cat("Which of the two is right is a question about one column at the threshold, ")
+cat("and it is open.\n\n")
+```
+
 Nothing rejects. The primary contrast, $H_2$ in the main cavity definition,
 gives $p = `r sprintf("%.3f", res$p[match("native_main_2", res$key)])`$ in native
 space and $p = `r sprintf("%.3f", res$p[match("mni_main_2", res$key)])`$ in MNI. The two spaces and the
-two cavity definitions were both pre-registered to be reported whatever they
+two cavity definitions were both fixed in advance to be reported whatever they
 showed, and they agree.
 
 ## Age as a positive control — declared post hoc
@@ -638,7 +688,7 @@ statistic does. Drawing both observed values against that single null puts the
 positive control and the clinical result on one axis.
 
 ```{r perm-null}
-#| fig-cap: "Exact permutation null of the POST HOC $L^2$ statistic, not of the pre-registered supremum: native frame, main cavity definition, $H_2$. All 12,870 relabellings of the same sixteen subjects, with the age and diagnosis statistics marked. Dashed line: the 95th percentile of the null, above which a statistic attains $p \\le 0.05$."
+#| fig-cap: "Exact permutation null of the POST HOC $L^2$ statistic, not of the supremum statistic fixed in advance: native frame, main cavity definition, $H_2$. All 12,870 relabellings of the same sixteen subjects, with the age and diagnosis statistics marked. Dashed line: the 95th percentile of the null, above which a statistic attains $p \\le 0.05$."
 #| fig-width: 8
 #| fig-height: 4
 #| cache: true
@@ -719,15 +769,34 @@ the two or three that are not. On the main definition the supremum lands where
 only three of the sixteen curves are non-zero.
 
 Restricting the supremum to a well-supported region does fix this, but the
-threshold has no canonical value and the p-value moves with it. The
-pre-registered statistic is therefore reported unrestricted, and the $L^p$
+threshold has no canonical value and the p-value moves with it. The statistic
+fixed in advance is therefore reported unrestricted, and the $L^p$
 distances are reported beside it as the alternative that carries no free
 parameter. They agree on every contrast.
 
 ## Provenance for the remaining figures quoted in Chapter 5
 
-Everything the chapter states that is not already produced above is produced
-here, so that no number in it rests on a calculation done once by hand.
+This section recomputes the figures the chapter quotes that the sections above
+do not already produce. It does not cover all of them, and it is worth being
+exact about which it leaves out, because an earlier version of this paragraph
+claimed it covered everything and did not.
+
+Two groups fall outside it. The first is everything upstream of the committed
+summaries: how much of the temporal horn volume detaches at 1 mm and in how many
+subjects, the fraction of each cavity held by its largest component, and the
+behaviour of the superseded brain-mask filtration (the shortfall against the
+inradius, and its correlation with the ventricular voxels touching the mask
+edge). Those are properties of the segmentations, which this repository cannot
+carry, so no report built on the committed CSVs can regenerate them; they are
+produced by `pipeline/04_analisis.py` and recorded in `output/resultados_test.json`.
+
+The second group is the age model of Section 5.5.1 of the thesis, together with
+the regression slope, the variance explained, the effect sizes and the power
+calculation that follow from it, and the threshold sweep behind the restricted
+supremum. Those are computable from what is committed here, and they are not
+computed here yet.
+
+Everything below is recomputed from the committed CSVs in `output/`.
 
 ```{r chapter5-extras}
 #| cache: true
@@ -811,9 +880,11 @@ cat(sprintf("eTIV Control %.1f mL vs PD %.1f mL, Welch p = %.3f\n",
             mean(meta$eTIV_mL[is_ctrl]), mean(meta$eTIV_mL[!is_ctrl]),
             t.test(meta$eTIV_mL[is_ctrl], meta$eTIV_mL[!is_ctrl])$p.value))
 
-# The fourteen-subject cohort. sub-05 and sub-14 are the two patients added
-# after the null result, per section 1b of the pre-registration; dropping them
-# leaves the eligible cohort of 8 control and 6 patients. The diagrams carry
+# The fourteen-subject cohort. sub-05 and sub-14 are the two patients whose
+# scans were added to the working set after the first contrast had been
+# computed; dropping them leaves the cohort as it stood at that point, 8
+# control and 6 patients, and asks whether the null depends on the two late
+# additions. It does not. The diagrams carry
 # the eTIV correction of the sixteen, which is a common factor and therefore
 # leaves T and p unchanged.
 ADDED <- c("sub-05", "sub-14")
