@@ -308,6 +308,47 @@ plt.savefig(FIGURES_DIR / 'landscapes_overlaid.png', dpi=200, bbox_inches='tight
 plt.close()
 print('figures/landscapes_overlaid.png saved')
 
+# ─── Figure 5: delay_embedding.png ────────────────────────────────────────────
+# The reconstructed attractor itself, which is the one step of the chain the
+# other figures skip: timeseries_to_landscape.png goes straight from the series
+# to the landscape. Chapter 4 claims that the SHAPE of the delay cloud is what
+# separates the regimes -- a point for an equilibrium, a closed curve for a
+# sustained oscillation -- and until now the thesis asserted that without
+# showing it.
+#
+# Same m = 2, tau = 3 the chapter fixes, and the same min-max normalisation
+# applied before the filtration, so this is the cloud persistent homology
+# actually sees rather than a schematic of one.
+TAU, BURN = 3, 25
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.6))
+for ax, (mu, col, dark, name) in zip(axes, [
+        (0.73, COL_BLUE_LIGHT, COL_BLUE_DARK, 'Stable'),
+        (0.96, COL_RED_LIGHT,  COL_RED_DARK,  'Aperiodic')]):
+    x = simulate_beetles(mu)
+    x = (x - x.min()) / (x.max() - x.min())
+    X, Y = x[:-TAU], x[TAU:]
+    ax.plot(X, Y, color=col, linewidth=0.6, alpha=0.45, zorder=1)
+    # The transient is drawn apart because Section 4.5.2 attributes the surviving
+    # stable-regime loops to it, not to the attractor.
+    ax.scatter(X[BURN:], Y[BURN:], s=11, color=col,  zorder=3, edgecolors='none',
+               label='after step 25')
+    ax.scatter(X[:BURN], Y[:BURN], s=11, color=dark, zorder=2, edgecolors='none',
+               alpha=0.85, label='first 25 steps')
+    ax.set_title(f'{name} regime (μ_a = {mu})')
+    ax.set_xlabel('$x_t$')
+    ax.set_ylabel(r'$x_{t+3}$')
+    ax.set_xlim(-0.05, 1.05)
+    ax.set_ylim(-0.05, 1.05)
+    ax.set_aspect('equal')
+    ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=8, loc='upper right', framealpha=0.9)
+
+plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'delay_embedding.png', dpi=200, bbox_inches='tight')
+plt.close()
+print('figures/delay_embedding.png saved')
+
 # ─── Distribute the figures to everything that consumes them ──────────────────
 
 # Two consumers, and both used to be fed by hand.
@@ -330,6 +371,7 @@ targets = [
     (FIGURES_DIR, ROOT.parent / 'ResearchProject_UCD' / 'figures', False, [
         ('timeseries_regimes.png',  'ts_timeseries_regimes.png'),
         ('landscapes_overlaid.png', 'ts_landscapes_overlaid.png'),
+        ('delay_embedding.png',     'ts_delay_embedding.png'),
     ]),
     # Part C's anatomy figure is the one image in the thesis that this script
     # does not draw. It is rendered by images/make_brain_figure.py from DICOM
