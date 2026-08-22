@@ -10,26 +10,24 @@ landscapes -> CSV; R (fda) does the functional data analysis. Run this after
 
 WHY THIS SCRIPT REFUSES TO OVERWRITE SILENTLY
 ---------------------------------------------
-On 3 Aug 2026 the committed .npy files were found to disagree with the
-committed output/*.csv they are supposed to produce, and not by rounding:
+On 3 Aug 2026 the committed .npy files were found to disagree with the committed
+output/*.csv they are supposed to produce, and not by rounding: the grid ended at
+0.765500 in the .npy against 0.768232 in the CSVs, and the .npy carried 74 non-zero
+stable landscapes against 71.
 
-    tseq          grid ends at 0.765500 (npy) vs 0.768232 (csv)
-    stable        74 non-zero landscapes (npy) vs 71 (csv), peak .0626 vs .0487
-    aperiodic     mean absolute difference 4.8e-02 on values up to 0.37
+That was resolved the same day. Re-running beetles_landscapes.ipynb, which has a fixed
+seed, reproduced the .npy bit for bit and did not reproduce the CSVs, so the CSVs were
+the stale side. They were regenerated, Part B was re-rendered against them, and the
+memoria was updated to the figures that came out: 126 identically zero stable landscapes
+of 200, a grid ending at 0.765500, and a mean landscape peak of 0.00202 against 0.22820.
+The .npy and the CSVs have been the same data since, and results_partB.qmd asserts it at
+render time.
 
-The .npy are dated 30 July, the CSVs 29 July, and the .npy match neither the
-main arm nor the burn-in replica in output_burnin/. Every number reported in
-Part B, and the "71 of them still carry a real (if small) transient H1 loop"
-in results_partB.qmd, comes from the 29 July CSVs. The .npy are an unidentified
-later run that was never propagated.
-
-So running this script as documented would have replaced the reported data with
-an unidentified one, quietly. The stopifnot() assertions in results_partB.qmd
-would have caught it at render time, but only after the fact.
-
-Rather than pick a winner, this script now compares before writing and stops if
-the difference is larger than rounding. Pass --force once you know which run you
-want; then re-render Part B and expect its assertions to need updating.
+The guard stays because the failure it caught was silent: running this script as
+documented would have replaced the reported data with a different run without saying so.
+It compares before writing and stops if the difference is larger than rounding. Pass
+--force once you know which run you want; then re-render Part B and expect its assertions
+to need updating.
 """
 
 import argparse
