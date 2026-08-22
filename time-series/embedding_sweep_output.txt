@@ -1,0 +1,26 @@
+==========================================================================
+EMBEDDING DIMENSION x RETAINED TRANSIENT
+==========================================================================
+
+  Everything except (m, burn-in) is held at the values of
+  beetles_landscapes.ipynb.  tau = 3, seed = 20250729, 200 series per regime.
+
+  m   burn-in  points  H1 diag empty  zero landscape aperiodic on
+               /cloud  (stable)       (stable)       stable side 
+  ------------------------------------------------------------------
+  2   0        198     0/200          126/200        45/200      
+  3   0        195     0/200          123/200        40/200      
+  2   200      198     200/200        200/200        9/200       
+  3   200      195     200/200        200/200        10/200      
+
+  mean landscape peak, by cell:
+    m=2 burn-in=0     stable 0.00202   aperiodic 0.22820   ratio 112.9   grid max 0.76550
+    m=3 burn-in=0     stable 0.00268   aperiodic 0.29014   ratio 108.2   grid max 0.96887
+    m=2 burn-in=200   stable 0.00000   aperiodic 0.34917   ratio inf   grid max 0.77016
+    m=3 burn-in=200   stable 0.00000   aperiodic 0.45156   ratio inf   grid max 0.99281
+
+  control (m=2, burn-in=0 must reproduce the committed run): PASS
+
+  Reading: raising m to the value Takens' bound requires leaves the stable
+  diagrams non-empty and moves the overlap only a little.  Discarding the
+  transient empties them and removes most of the overlap, at either m.
