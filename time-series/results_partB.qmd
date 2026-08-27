@@ -58,7 +58,10 @@ ref <- list(
   n_stable_zero = 126, n_aperiodic_zero = 0,
   mean_max_stable = 0.0020, mean_max_aperiodic = 0.228,
   pc1_pct = 84, pc2_pct = 13,
-  n_aperiodic_pc1_neg = 42,
+  # Was 42 before the 3 Aug re-baselining and is 45 after. It was missed
+  # when the other baselines were updated: the assert below tolerates a
+  # drift of 5, so |45 - 42| = 3 passed and the stale value survived.
+  n_aperiodic_pc1_neg = 45,
   # test1_Tobs was 85.5 before the 3 Aug re-baselining and is 68.05 after, a
   # move of 17.4 that broke the tolerance of 15 on the first re-render. The
   # test result is untouched: crit95 moved by 0.04 against a tolerance of 0.5,
@@ -402,16 +405,19 @@ function space. Separation is **not** perfect, though:
 **`r n_aperiodic_pc1_neg` of the 200 aperiodic series** (`r sprintf("%.0f%%", 100*n_aperiodic_pc1_neg/200)`)
 also fall in PC1 < 0, overlapping the stable cloud.
 
-This is a genuine limitation of the fixed embedding parameters
-($m = 2$, $\tau = 3$), not of the FDA pipeline: for some aperiodic
-trajectories, this particular embedding does not produce a topologically
-prominent loop — the reconstructed attractor stays close enough to a compact
-blob that its H1 landscape resembles a stable series' near-zero landscape.
-Takens' theorem guarantees a *generic* embedding recovers the attractor
-topology, but $(m, \tau)$ are fixed constants here, not tuned per series; a
-natural extension would be a sensitivity analysis over $(m, \tau)$ to check
-whether a higher embedding dimension or a different delay recovers the loop
-for these borderline series.
+This is not a limitation of the FDA pipeline: for some aperiodic
+trajectories the reconstructed attractor stays close enough to a compact
+blob that its H1 landscape resembles a stable series’ near-zero landscape.
+It is tempting to blame the fixed embedding parameters ($m = 2$,
+$\tau = 3$), since Takens’ theorem guarantees only that a *generic*
+embedding recovers the attractor topology, and $(m, \tau)$ are constants
+here rather than tuned per series. That explanation has been tested and
+does not hold. `embedding_sweep.py` crosses $m \in \{2, 3\}$ with the
+retained transient: raising $m$ to the value Takens’ bound requires moves
+the overlap from 45/200 only to 40/200, while discarding the transient
+removes most of it at either dimension (9/200 and 10/200). What these
+borderline series carry is a retained approach to the attractor, not too
+low an embedding dimension. A sweep over $\tau$ remains untested.
 
 ## Functional permutation test: stable vs. aperiodic
 
@@ -1112,7 +1118,7 @@ threshold.
 
 Discarding the transient sharpens an already-decisive result; it does not
 create it. With the transient retained (the main analysis above), the
-stable-vs-aperiodic separation is significant at `p < 1e-4` with 42 of 200
+stable-vs-aperiodic separation is significant at `p < 1e-4` with `r n_aperiodic_pc1_neg` of 200
 aperiodic series still overlapping the stable cloud on PC1 — a real but
 incomplete separation, honestly reported. The burn-in appendix quantifies the
 alternative: removing the transient pushes that overlap down to
